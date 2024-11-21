@@ -3,7 +3,8 @@ from sqlalchemy import Column, Integer, String, Float, DateTime, JSON
 from sqlalchemy.ext.declarative import declarative_base
 import datetime
 
-Base = declarative_base()
+
+from db.models.base import Base
 
 class Order(Base):
     __tablename__ = 'orders'

@@ -25,22 +25,17 @@ class Services(containers.DeclarativeContainer):
         echo=False
     )
 
-    # Bank Info Engine provider
-    bank_info_engine = providers.Singleton(
-        create_engine,
-        config.bank_info_db_url,
-        echo=False
-    )
 
-    # Bank Info Session factory provider
-    bank_info_session_factory = providers.Singleton(
+    session_factory = providers.Singleton(
         sessionmaker,
-        bind=bank_info_engine
+        bind=engine
     )
 
-
-
-
+    from db.repositories.order_repository import OrderRepository
+    order_repository = providers.Factory(
+        OrderRepository,
+        session=providers.Dependency()
+    )
 
 
 

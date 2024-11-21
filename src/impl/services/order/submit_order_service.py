@@ -98,7 +98,7 @@ class SubmitOrderService:
                 payment_address=payment_address,
                 amount_due=self.request.amount,
                 expires_at=expires_at,
-                metadata=self.request.metadata
+                metadata=self.request.order_metadata
             )
 
             logger.debug("Order created successfully")
@@ -127,6 +127,6 @@ class SubmitOrderService:
             created_at=order.created_at,
             expires_at=order.expires_at,
             transactions=[],  # You can populate this if needed
-            metadata=order.order_metadata
+            order_metadata=order.order_metadata
         )
 

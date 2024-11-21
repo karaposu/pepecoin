@@ -10,8 +10,8 @@ from dotenv import load_dotenv
 import os
 
 class OrderRepository:
-    def __init__(self, db_session: Session):
-        self.db_session = db_session
+    def __init__(self, session: Session):
+        self.session = session
 
         # Load environment variables
         load_dotenv()
@@ -45,9 +45,9 @@ class OrderRepository:
         )
 
         # Add the order to the session and commit
-        self.db_session.add(order)
-        self.db_session.commit()
-        self.db_session.refresh(order)
+        self.session.add(order)
+        self.session.commit()
+        self.session.refresh(order)
 
         return order
 
