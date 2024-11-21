@@ -26,6 +26,8 @@ class SubmitOrderService:
         self.dependencies = dependencies
         self.response = None
 
+        self.pepecoin = self.dependencies.pepecoin_factory()
+
         logger.debug("Inside SubmitOrderService")
 
         self.preprocess_request_data()
@@ -33,33 +35,7 @@ class SubmitOrderService:
 
         self.is_first_upload=None
 
-    def generate_payment_address(self, label: str, mock=False) -> str:
-        """
-        Generates a new Pepecoin payment address with the given label.
 
-        :param label: A label to associate with the new address.
-        :return: A new Pepecoin payment address.
-        """
-
-        if mock:
-            return "adfasjdfasdjfasdjfasfdh"
-
-        else:
-
-            try:
-                # Load environment variables
-                load_dotenv()
-                rpc_user = os.getenv("RPC_USER")
-                rpc_password = os.getenv("RPC_PASSWORD")
-
-                # Initialize Pepecoin RPC client
-                pepecoin_rpc = PepecoinRPC(rpc_user, rpc_password)
-
-                payment_address = pepecoin_rpc.generate_new_address(label=label)
-                return payment_address
-            except Exception as e:
-                logger.error(f"Error generating payment address: {e}\n{format_exc()}")
-                return None
 
     def preprocess_request_data(self):
 
@@ -83,8 +59,9 @@ class SubmitOrderService:
             # Generate a unique order ID
             order_id = f"ord_{uuid4().hex}"
 
-            # Generate the payment address
-            payment_address = self.generate_payment_address(order_id, mock=True)
+
+            payment_address = self.pepecoin.generate_new_address(label=order_id)
+
 
             if not payment_address:
                 raise Exception("Failed to generate payment address.")
