@@ -1,10 +1,12 @@
 # example_usage.py
 
 from pepecoin_rpc import PepecoinRPC
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
-# Replace with your actual RPC credentials
-rpc_user = "your_rpc_username"
-rpc_password = "your_rpc_password"
+rpc_user = os.getenv("RPC_USER")
+rpc_password = os.getenv("RPC_PASSWORD")
 
 # Initialize the Pepecoin RPC client
 pepecoin_rpc = PepecoinRPC(rpc_user, rpc_password)
