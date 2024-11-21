@@ -1,0 +1,19 @@
+# /etc/systemd/system/pepecoind.service
+
+[Unit]
+Description=Pepecoin Daemon
+After=network.target
+
+[Service]
+ExecStart=/path/to/pepecoind -daemon
+ExecStop=/path/to/pepecoin-cli stop
+Restart=always
+User=your_username
+Group=your_username
+
+[Install]
+WantedBy=multi-user.target
+
+
+#sudo systemctl enable pepecoind
+#sudo systemctl start pepecoind

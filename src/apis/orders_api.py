@@ -4,7 +4,6 @@ from typing import Dict, List  # noqa: F401
 import importlib
 import pkgutil
 
-from apis.orders_api_base import BaseOrdersApi
 import impl
 
 from fastapi import (  # noqa: F401
@@ -22,7 +21,7 @@ from fastapi import (  # noqa: F401
     status,
 )
 
-from my_package.models.extra_models import TokenModel  # noqa: F401
+from models.extra_models import TokenModel  # noqa: F401
 from pydantic import Field, StrictInt, StrictStr, field_validator
 from typing import Optional
 from typing_extensions import Annotated

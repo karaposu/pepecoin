@@ -16,7 +16,7 @@ from fastapi.security import (  # noqa: F401
 )
 from fastapi.security.api_key import APIKeyCookie, APIKeyHeader, APIKeyQuery  # noqa: F401
 
-from my_package.models.extra_models import TokenModel
+from models.extra_models import TokenModel
 
 
 def get_token_ApiKeyAuth(
