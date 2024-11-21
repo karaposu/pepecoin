@@ -8,3 +8,5 @@ dependency_injector
 pyyaml
 python-bitcoinrpc
 python-dotenv
+werkzeug
+python-bitcoinrpc

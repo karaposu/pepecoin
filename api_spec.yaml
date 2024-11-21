@@ -149,7 +149,7 @@ components:
           format: email
           description: Customer's email address
           example: "customer@example.com"
-        metadata:
+        order_metadata:
           type: object
           description: Additional data for the order
           additionalProperties:
@@ -196,7 +196,7 @@ components:
           description: List of transactions associated with the order
           items:
             $ref: '#/components/schemas/Transaction'
-        metadata:
+        order_metadata:
           type: object
           description: Additional data associated with the order
           additionalProperties:
