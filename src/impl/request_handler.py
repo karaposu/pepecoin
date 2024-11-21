@@ -60,6 +60,23 @@ class RequestHandler:
         return True
 
 
+    def handle_get_all_orders(self, status, limit, offset):
+
+        from impl.services.order.get_all_orders_service import GetAllOrdersService
+        dependency = self.app.state.services
+
+        p = GetAllOrdersService(status, limit, offset, dependencies=dependency)
+        return p.response
+
+    def handle_get_order_status(self, order_id):
+
+
+        from impl.services.order.get_order_status_service import GetOrderStatusService
+        dependency = self.app.state.services
+
+        p = GetOrderStatusService(order_id, dependencies=dependency)
+        return p.response
+
     def handle_submit_order(self, request):
 
         # class MyRequest:

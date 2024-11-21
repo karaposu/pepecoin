@@ -93,9 +93,15 @@ async def get_order(
         get_token_ApiKeyAuth
     ),
 ) -> OrderResponse:
-    if not BaseOrdersApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseOrdersApi.subclasses[0]().get_order(order_id)
+    try:
+        logger.debug("create_order is called")
+        logger.debug(f"incoming data: {order_id} ")
+        rh = get_request_handler()
+        return rh.handle_get_order_status(order_id)
+
+    except Exception as e:
+        logger.error(f"Error processing file: {str(e)}", exc_info=True)  # Log the exception details
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
 
 @router.get(
@@ -115,10 +121,15 @@ async def list_orders(
         get_token_ApiKeyAuth
     ),
 ) -> OrdersListResponse:
-    if not BaseOrdersApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseOrdersApi.subclasses[0]().list_orders(status, limit, offset)
+    try:
+        logger.debug("list_orders is called")
+        # logger.debug(f"incoming data: {status} ")
+        rh = get_request_handler()
+        return rh.handle_get_all_orders(status, limit, offset)
 
+    except Exception as e:
+        logger.error(f"Error processing file: {str(e)}", exc_info=True)  # Log the exception details
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
 
 @router.delete(

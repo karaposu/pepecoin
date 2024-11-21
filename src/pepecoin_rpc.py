@@ -61,3 +61,17 @@ class PepecoinRPC:
         except JSONRPCException as e:
             print(f"Error getting balance: {e}")
             return None
+
+    def unlock_wallet(self, passphrase, timeout):
+        try:
+            self.rpc_connection.walletpassphrase(passphrase, timeout)
+            print("Wallet unlocked successfully.")
+        except JSONRPCException as e:
+            print(f"Error unlocking wallet: {e}")
+
+    def lock_wallet(self):
+        try:
+            self.rpc_connection.walletlock()
+            print("Wallet locked successfully.")
+        except JSONRPCException as e:
+            print(f"Error locking wallet: {e}")

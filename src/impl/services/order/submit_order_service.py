@@ -26,7 +26,7 @@ class SubmitOrderService:
         self.dependencies = dependencies
         self.response = None
 
-        logger.debug("Inside UploadFileService")
+        logger.debug("Inside SubmitOrderService")
 
         self.preprocess_request_data()
         self.process_request()
