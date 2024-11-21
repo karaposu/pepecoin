@@ -41,8 +41,8 @@ class OrderResponse(BaseModel):
     created_at: Optional[datetime] = Field(default=None, description="Timestamp when the order was created")
     expires_at: Optional[datetime] = Field(default=None, description="Timestamp when the order expires")
     transactions: Optional[List[Transaction]] = Field(default=None, description="List of transactions associated with the order")
-    metadata: Optional[Dict[str, StrictStr]] = Field(default=None, description="Additional data associated with the order")
-    __properties: ClassVar[List[str]] = ["order_id", "payment_address", "amount_due", "amount_paid", "status", "created_at", "expires_at", "transactions", "metadata"]
+    order_metadata: Optional[Dict[str, StrictStr]] = Field(default=None, description="Additional data associated with the order")
+    __properties: ClassVar[List[str]] = ["order_id", "payment_address", "amount_due", "amount_paid", "status", "created_at", "expires_at", "transactions", "order_metadata"]
 
     @field_validator('status')
     def status_validate_enum(cls, value):
@@ -118,7 +118,7 @@ class OrderResponse(BaseModel):
             "created_at": obj.get("created_at"),
             "expires_at": obj.get("expires_at"),
             "transactions": [Transaction.from_dict(_item) for _item in obj.get("transactions")] if obj.get("transactions") is not None else None,
-            "metadata": obj.get("metadata")
+            "order_metadata": obj.get("order_metadata")
         })
         return _obj
 

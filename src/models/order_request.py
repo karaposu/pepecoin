@@ -27,6 +27,7 @@ try:
 except ImportError:
     from typing_extensions import Self
 
+
 class OrderRequest(BaseModel):
     """
     OrderRequest
@@ -35,8 +36,8 @@ class OrderRequest(BaseModel):
     currency: Optional[StrictStr] = Field(default=None, description="Currency code (e.g., PEPE, USD)")
     description: Optional[StrictStr] = Field(default=None, description="Description of the order")
     customer_email: Optional[StrictStr] = Field(default=None, description="Customer's email address")
-    metadata: Optional[Dict[str, StrictStr]] = Field(default=None, description="Additional data for the order")
-    __properties: ClassVar[List[str]] = ["amount", "currency", "description", "customer_email", "metadata"]
+    order_metadata: Optional[Dict[str, StrictStr]] = Field(default=None, description="Additional data for the order")
+    __properties: ClassVar[List[str]] = ["amount", "currency", "description", "customer_email", "order_metadata"]
 
     model_config = {
         "populate_by_name": True,
@@ -91,7 +92,7 @@ class OrderRequest(BaseModel):
             "currency": obj.get("currency"),
             "description": obj.get("description"),
             "customer_email": obj.get("customer_email"),
-            "metadata": obj.get("metadata")
+            "order_metadata": obj.get("order_metadata")
         })
         return _obj
 

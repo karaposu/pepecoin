@@ -4,6 +4,9 @@ from typing import Dict, List  # noqa: F401
 import importlib
 import pkgutil
 
+import logging
+logger = logging.getLogger(__name__)
+
 import impl
 
 from fastapi import (  # noqa: F401
@@ -36,6 +39,13 @@ router = APIRouter()
 ns_pkg = impl
 for _, name, _ in pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + "."):
     importlib.import_module(name)
+
+
+
+def get_request_handler():
+    from app import app
+    from impl.request_handler import RequestHandler
+    return RequestHandler(app)
 
 
 @router.delete(
@@ -75,9 +85,15 @@ async def create_order(
         get_token_ApiKeyAuth
     ),
 ) -> OrderResponse:
-    if not BaseOrdersApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseOrdersApi.subclasses[0]().create_order(order_request)
+    try:
+        logger.debug("create_order is called")
+        logger.debug(f"incoming data: {order_request} ")
+        rh = get_request_handler()
+        return rh.handle_register(order_request)
+
+    except Exception as e:
+        logger.error(f"Error processing file: {str(e)}", exc_info=True)  # Log the exception details
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
 
 @router.get(
