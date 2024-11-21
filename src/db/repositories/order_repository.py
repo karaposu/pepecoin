@@ -8,6 +8,7 @@ import datetime
 from pepecoin_rpc import PepecoinRPC
 from dotenv import load_dotenv
 from typing import List, Optional, Tuple
+from sqlalchemy import func
 import os
 
 class OrderRepository:
@@ -109,5 +110,33 @@ class OrderRepository:
         self.session.refresh(order)
 
         return order
+
+    def cancel_order(self, order_id: str) -> Optional[Order]:
+        """
+        Cancels an order by updating its status to 'Cancelled'.
+
+        :param order_id: The unique order ID.
+        :return: The updated Order object if successful, else None.
+        """
+        try:
+            order = self.get_order(order_id)
+            if not order:
+                print(f"Order with ID {order_id} not found.")
+                return None
+
+            # Check if order is already paid or cancelled
+            if order.status in ['Paid', 'Cancelled']:
+                print(f"Order with ID {order_id} cannot be cancelled. Current status: {order.status}")
+                return None
+
+            # Update the order status
+            order.status = 'Cancelled'
+            self.db_session.commit()
+            self.db_session.refresh(order)
+            return order
+        except Exception as e:
+            self.db_session.rollback()
+            print(f"Error cancelling order with ID {order_id}: {e}")
+            return None
 
 

@@ -148,7 +148,13 @@ async def cancel_order(
         get_token_ApiKeyAuth
     ),
 ) -> OrderResponse:
-    if not BaseOrdersApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseOrdersApi.subclasses[0]().cancel_order(order_id)
+    try:
+        logger.debug("list_orders is called")
+        # logger.debug(f"incoming data: {status} ")
+        rh = get_request_handler()
+        return rh.handle_cancel_order(order_id)
+
+    except Exception as e:
+        logger.error(f"Error processing file: {str(e)}", exc_info=True)  # Log the exception details
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 

@@ -68,6 +68,16 @@ class RequestHandler:
         p = GetAllOrdersService(status, limit, offset, dependencies=dependency)
         return p.response
 
+
+
+    def handle_cancel_order(self, order_id):
+
+
+        from impl.services.order.cancel_order_service import CancelOrderService
+        dependency = self.app.state.services
+
+        p = CancelOrderService(order_id, dependencies=dependency)
+        return p.response
     def handle_get_order_status(self, order_id):
 
 
