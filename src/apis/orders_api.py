@@ -48,25 +48,6 @@ def get_request_handler():
     return RequestHandler(app)
 
 
-@router.delete(
-    "/orders/{order_id}",
-    responses={
-        200: {"model": OrderResponse, "description": "Order successfully cancelled"},
-        404: {"model": ErrorResponse, "description": "Order not found"},
-    },
-    tags=["Orders"],
-    summary="Cancel an order",
-    response_model_by_alias=True,
-)
-async def cancel_order(
-    order_id: Annotated[StrictStr, Field(description="Unique identifier for the order")] = Path(..., description="Unique identifier for the order"),
-    token_ApiKeyAuth: TokenModel = Security(
-        get_token_ApiKeyAuth
-    ),
-) -> OrderResponse:
-    if not BaseOrdersApi.subclasses:
-        raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseOrdersApi.subclasses[0]().cancel_order(order_id)
 
 
 @router.post(
@@ -89,7 +70,7 @@ async def create_order(
         logger.debug("create_order is called")
         logger.debug(f"incoming data: {order_request} ")
         rh = get_request_handler()
-        return rh.handle_register(order_request)
+        return rh.handle_submit_order(order_request)
 
     except Exception as e:
         logger.error(f"Error processing file: {str(e)}", exc_info=True)  # Log the exception details
@@ -137,3 +118,26 @@ async def list_orders(
     if not BaseOrdersApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
     return await BaseOrdersApi.subclasses[0]().list_orders(status, limit, offset)
+
+
+
+@router.delete(
+    "/orders/{order_id}",
+    responses={
+        200: {"model": OrderResponse, "description": "Order successfully cancelled"},
+        404: {"model": ErrorResponse, "description": "Order not found"},
+    },
+    tags=["Orders"],
+    summary="Cancel an order",
+    response_model_by_alias=True,
+)
+async def cancel_order(
+    order_id: Annotated[StrictStr, Field(description="Unique identifier for the order")] = Path(..., description="Unique identifier for the order"),
+    token_ApiKeyAuth: TokenModel = Security(
+        get_token_ApiKeyAuth
+    ),
+) -> OrderResponse:
+    if not BaseOrdersApi.subclasses:
+        raise HTTPException(status_code=500, detail="Not implemented")
+    return await BaseOrdersApi.subclasses[0]().cancel_order(order_id)
+
