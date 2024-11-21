@@ -23,7 +23,7 @@ import json
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional, Union
-from my_package.models.transaction import Transaction
+from models.transaction import Transaction
 try:
     from typing import Self
 except ImportError:

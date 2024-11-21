@@ -22,7 +22,7 @@ import json
 
 from pydantic import BaseModel, ConfigDict, Field, StrictInt
 from typing import Any, ClassVar, Dict, List, Optional
-from my_package.models.order_response import OrderResponse
+from models.order_response import OrderResponse
 try:
     from typing import Self
 except ImportError:

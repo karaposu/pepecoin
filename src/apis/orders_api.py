@@ -4,8 +4,8 @@ from typing import Dict, List  # noqa: F401
 import importlib
 import pkgutil
 
-from my_package.apis.orders_api_base import BaseOrdersApi
-import openapi_server.impl
+from apis.orders_api_base import BaseOrdersApi
+import impl
 
 from fastapi import (  # noqa: F401
     APIRouter,
@@ -26,15 +26,15 @@ from my_package.models.extra_models import TokenModel  # noqa: F401
 from pydantic import Field, StrictInt, StrictStr, field_validator
 from typing import Optional
 from typing_extensions import Annotated
-from my_package.models.error_response import ErrorResponse
-from my_package.models.order_request import OrderRequest
-from my_package.models.order_response import OrderResponse
-from my_package.models.orders_list_response import OrdersListResponse
-from my_package.security_api import get_token_ApiKeyAuth
+from models.error_response import ErrorResponse
+from models.order_request import OrderRequest
+from models.order_response import OrderResponse
+from models.orders_list_response import OrdersListResponse
+from security_api import get_token_ApiKeyAuth
 
 router = APIRouter()
 
-ns_pkg = openapi_server.impl
+ns_pkg = impl
 for _, name, _ in pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + "."):
     importlib.import_module(name)
 
