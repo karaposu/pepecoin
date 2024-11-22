@@ -10,7 +10,9 @@ def setup_node():
     Run the Pepecoin node setup script.
     """
     # Determine the path to the setup script
-    script_path = os.path.join(os.path.dirname(__file__), '..', 'scripts', 'setup_pepecoin_node.sh')
+    # script_path = os.path.join(os.path.dirname(__file__), '..', 'scripts', 'setup_pepecoin_node.sh')
+    script_path = os.path.join(os.path.dirname(__file__), 'scripts', 'setup_pepecoin_node.sh')
+
     script_path = os.path.abspath(script_path)
 
     # Check if the script exists
