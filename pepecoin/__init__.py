@@ -1,0 +1,1 @@
+from .pepecoin import Pepecoin
