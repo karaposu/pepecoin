@@ -1,0 +1,4 @@
+include scripts/*.sh
+include scripts/*.service
+include README.md
+include pepe_logo.png
