@@ -1,6 +1,3 @@
-Sure! I've reviewed your README and made some grammatical corrections and improvements for clarity. Here's the updated version:
-
----
 
 # Pepecoin Python Client
 
