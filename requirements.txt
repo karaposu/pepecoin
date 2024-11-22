@@ -1,12 +1,2 @@
-fastapi
-uvicorn
-pydantic
-requests
-sqlalchemy
-indented_logger
-dependency_injector
-pyyaml
-python-bitcoinrpc
-python-dotenv
-werkzeug
-python-bitcoinrpc
+
+

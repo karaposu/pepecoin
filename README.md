@@ -1,247 +1,337 @@
+# Pepecoin Python Client
 
-
-# ** 🐸 Pepecoin Payment Gateway**
-
-Pepecoin Payment Gateway is a Python-based backend server built using FastAPI to handle transactions, monitor payments, and automate order management for applications and merchants accepting Pepecoin cryptocurrency payments.
-
-# Stripepe
----
-
-## **Features**
-
-- 🚀 **FastAPI**: High-performance API implementation with OpenAPI documentation.
-- 💳 **Payment Processing**: Automatically generate payment addresses, monitor transactions, and confirm payments.
-- 🔄 **Order Management**: Create, list, cancel, and track orders with real-time updates.
-- 🔧 **Customizable**: Add metadata and descriptions to orders for better tracking.
-- 🔒 **Secure**: API key authentication and secure database storage.
-- 🔍 **Transaction Monitoring**: Automatic transaction validation with Pepecoin blockchain.
+A Python client library for interacting with a Pepecoin node via RPC. The `Pepecoin` class provides a simplified interface for wallet management, address generation, balance checking, payment verification, node connection checking, wallet locking/unlocking, and mass transferring funds.
 
 ---
 
-## **Installation**
+## Features
 
-### **Prerequisites**
+- **Simplified RPC Connection**: Easily connect to a Pepecoin node using RPC.
+- **Wallet Management**: Create, encrypt, lock, and unlock wallets.
+- **Address Generation**: Generate new Pepecoin addresses with optional labels.
+- **Balance Checking**: Check the balance of wallets.
+- **Payment Verification**: Verify if payments have been received at specific addresses.
+- **Mass Transfer**: Transfer funds from multiple wallets to a single address.
+- **Node Connection Checking**: Verify if the Pepecoin node is connected and reachable.
 
-- Python 3.7+
-- A running Pepecoin full node with RPC enabled, or access to a Pepecoin blockchain API.
-- PostgreSQL or another supported database.
+---
 
-### **Step 1: Install the Library**
+## Installation
 
-Install the package via pip:
+Install the package via `pip`:
 
 ```bash
 pip install pepecoin
 ```
 
-### **Step 2: Set Up Environment Variables**
-
-Create a `.env` file in the project root:
-
-```bash
-DATABASE_URL=postgresql://user:password@localhost/pepecoin_db
-PEPECOIN_RPC_URL=http://localhost:12345/
-PEPECOIN_RPC_USER=your_rpc_username
-PEPECOIN_RPC_PASSWORD=your_rpc_password
-API_KEY=your_api_key_here
-```
-
-### **Step 3: Initialize the Database**
-
-Run database migrations to set up tables:
-
-```bash
-alembic upgrade head
-```
-
-### **Step 4: Start the Server**
-
-Run the FastAPI server:
-
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000
-```
-
-The server will start on `http://localhost:8000`.
-
 ---
 
+## Getting Started
 
-### **Endpoints**
+### Prerequisites
 
-#### **1. Create an Order**
+- if you havent went through the official setup process you can run `placeholder` 
+and a bash script will start the installation automatically. The script follow the steps in this 
+documentation  (https://github.com/pepecoinppc/pepecoin/blob/master/INSTALL.md). Feel free to inspect it. 
 
-- **POST** `/v1/orders`
-- Request:
+- **Running Pepecoin Node**: You must have a Pepecoin node running with RPC enabled (check it by   ```pepecoind -daemon ``` from terminal)
+- **RPC Credentials**: Dont forget to add `RPC_USER` and `RPC_PASSWORD` in .env file
 
-```json
-{
-  "amount": 10.5,
-  "currency": "PEPE",
-  "description": "Purchase of digital artwork",
-  "customer_email": "customer@example.com",
-  "metadata": {
-    "order_number": "12345"
-  }
-}
+
+## Usage Examples
+
+### Initialize the Pepecoin Client
+
+```python
+from pepecoin import Pepecoin
+from dotenv import  load_dotenv
+import os
+load_dotenv()
+
+# Initialize the Pepecoin client
+pepecoin = Pepecoin(
+    rpc_user=os.environ.get("RPC_USER"),
+    rpc_password=os.environ.get("RPC_PASSWORD"),
+    host="127.0.0.1",
+    port=29373,
+    wallet_name="merchant_wallet"
+)
 ```
 
-- Response:
+### Check Node Connection
 
-```json
-{
-  "order_id": "ord_123456789",
-  "payment_address": "PpK1q2w3e4r5t6y7u8i9o0pLkJhGfDsA",
-  "amount_due": 10.5,
-  "amount_paid": 0.0,
-  "status": "Pending",
-  "created_at": "2023-10-15T12:34:56Z",
-  "expires_at": "2023-10-15T13:34:56Z",
-  "transactions": [],
-  "metadata": {
-    "order_number": "12345"
-  }
-}
+```
+if pepecoin.check_node_connection():
+    print("Node is connected.")
+else:
+    print("Node is not connected.")
 ```
 
-#### **2. Retrieve Order Details**
+### Create a New Wallet
 
-- **GET** `/v1/orders/{order_id}`
-- Response:
-
-```json
-{
-  "order_id": "ord_123456789",
-  "payment_address": "PpK1q2w3e4r5t6y7u8i9o0pLkJhGfDsA",
-  "amount_due": 10.5,
-  "amount_paid": 10.5,
-  "status": "Paid",
-  "created_at": "2023-10-15T12:34:56Z",
-  "expires_at": "2023-10-15T13:34:56Z",
-  "transactions": [
-    {
-      "txid": "b6f6991d3c...e8e8e8e8e8",
-      "amount": 10.5,
-      "confirmations": 3,
-      "timestamp": "2023-10-15T12:35:00Z"
-    }
-  ],
-  "metadata": {
-    "order_number": "12345"
-  }
-}
+```
+wallet_created = pepecoin.create_new_wallet(
+    wallet_name="merchant_wallet",
+    passphrase="secure_passphrase"
+)
+if wallet_created:
+    print("Wallet created successfully.")
+else:
+    print("Failed to create wallet.")
 ```
 
-#### **3. List Orders**
+### Generate a New Address
 
-- **GET** `/v1/orders`
-- Query Parameters:
-  - `status` (Optional): Filter by order status (e.g., `Pending`, `Paid`).
-  - `limit` (Optional): Number of results to return (default: 20).
-  - `offset` (Optional): Pagination offset (default: 0).
+```
+payment_address = pepecoin.generate_new_address(label="order_12345")
+print(f"Payment Address: {payment_address}")
+```
 
-#### **4. Cancel an Order**
+### Check Wallet Balance
 
-- **DELETE** `/v1/orders/{order_id}`
-- Response:
+```
+balance = pepecoin.check_balance()
+print(f"Wallet Balance: {balance} PEPE")
+```
 
-```json
-{
-  "order_id": "ord_123456789",
-  "status": "Cancelled"
-}
+### Check for Payments
+
+```
+payment_received = pepecoin.check_payment(
+    address=payment_address,
+    expected_amount=10.0
+)
+if payment_received:
+    print("Payment received.")
+else:
+    print("Payment not yet received.")
+```
+
+### Lock and Unlock Wallet
+
+```
+# Unlock the wallet
+pepecoin.unlock_wallet(
+    wallet_name="merchant_wallet",
+    passphrase="secure_passphrase",
+    timeout=60  # Unlock for 60 seconds
+)
+
+# Lock the wallet
+pepecoin.lock_wallet(wallet_name="merchant_wallet")
+```
+
+### Mass Transfer Funds
+
+```
+from_wallets = ["wallet1", "wallet2"]
+passphrases = ["passphrase1", "passphrase2"]
+to_address = "PMainWalletAddress1234567890"
+
+tx_ids = pepecoin.mass_transfer(
+    from_wallets=from_wallets,
+    to_address=to_address,
+    passphrases=passphrases
+)
+print(f"Mass transfer transaction IDs: {tx_ids}")
 ```
 
 ---
 
-## **Development**
+## API Reference
 
-### **Project Structure**
+### `__init__`
 
-```plaintext
-pepecoin_payment_gateway/
-├── app/
-│   ├── main.py              # Entry point of the application
-│   ├── api/                 # API routes and dependencies
-│   ├── models/              # Database models
-│   ├── schemas/             # Pydantic schemas for requests/responses
-│   ├── services/            # Business logic and Pepecoin node interactions
-│   ├── db.py                # Database initialization
-│   ├── config.py            # Configuration and environment variables
-│   └── utils.py             # Helper utilities
-├── alembic/                 # Database migrations
-├── tests/                   # Unit and integration tests
-├── requirements.txt         # Python dependencies
-├── README.md                # Project documentation
-├── .env                     # Environment variables (do not commit this!)
-└── .gitignore               # Git ignore file
+Initialize the Pepecoin RPC connection.
+
+```
+def __init__(
+    self,
+    rpc_user: str,
+    rpc_password: str,
+    host: str = '127.0.0.1',
+    port: int = 29373,
+    wallet_name: Optional[str] = None
+) -> None:
 ```
 
-### **Testing**
+- **Parameters**:
+  - `rpc_user`: RPC username.
+  - `rpc_password`: RPC password.
+  - `host`: Host where the Pepecoin node is running.
+  - `port`: RPC port of the Pepecoin node.
+  - `wallet_name`: Name of the wallet to interact with (optional).
 
-1. Install testing dependencies:
+### `init_rpc`
 
-```bash
-pip install pytest pytest-cov
+Initialize the RPC connection to the Pepecoin node.
+
+```
+def init_rpc(self) -> AuthServiceProxy:
 ```
 
-2. Run tests:
+- **Returns**: `AuthServiceProxy` object.
 
-```bash
-pytest --cov=app tests/
+### `check_node_connection`
+
+Check if the node is connected and reachable.
+
 ```
+def check_node_connection(self) -> bool:
+```
+
+- **Returns**: `True` if connected, `False` otherwise.
+
+### `create_new_wallet`
+
+Create a new wallet.
+
+```
+def create_new_wallet(
+    self,
+    wallet_name: str,
+    passphrase: str = None,
+    disable_private_keys: bool = False
+) -> bool:
+```
+
+- **Parameters**:
+  - `wallet_name`: Name of the new wallet.
+  - `passphrase`: Passphrase to encrypt the wallet (optional).
+  - `disable_private_keys`: If `True`, the wallet will not contain private keys.
+- **Returns**: `True` if wallet was created successfully, `False` otherwise.
+
+### `get_wallet_rpc`
+
+Get an RPC connection for a specific wallet.
+
+```
+def get_wallet_rpc(self, wallet_name: str) -> AuthServiceProxy:
+```
+
+- **Parameters**:
+  - `wallet_name`: Name of the wallet.
+- **Returns**: `AuthServiceProxy` object connected to the wallet.
+
+### `lock_wallet`
+
+Lock the specified wallet.
+
+```
+def lock_wallet(self, wallet_name: Optional[str] = None) -> None:
+```
+
+- **Parameters**:
+  - `wallet_name`: Name of the wallet to lock. If `None`, uses the default wallet.
+
+### `unlock_wallet`
+
+Unlock the specified wallet.
+
+```
+def unlock_wallet(
+    self,
+    wallet_name: Optional[str],
+    passphrase: str,
+    timeout: int = 60
+) -> None:
+```
+
+- **Parameters**:
+  - `wallet_name`: Name of the wallet to unlock.
+  - `passphrase`: Passphrase of the wallet.
+  - `timeout`: Time in seconds for which the wallet remains unlocked.
+
+### `generate_new_address`
+
+Generate a new Pepecoin address.
+
+```
+def generate_new_address(self, label: str = None) -> str:
+```
+
+- **Parameters**:
+  - `label`: Label to associate with the new address (optional).
+- **Returns**: The new Pepecoin address.
+
+### `check_balance`
+
+Check the balance of the specified wallet.
+
+```
+def check_balance(self, wallet_name: Optional[str] = None) -> float:
+```
+
+- **Parameters**:
+  - `wallet_name`: Name of the wallet to check balance for. If `None`, uses the default wallet.
+- **Returns**: The balance of the wallet.
+
+### `check_payment`
+
+Check if the expected amount has been received at the specified address.
+
+```
+def check_payment(
+    self,
+    address: str,
+    expected_amount: float,
+    min_confirmations: int = 1
+) -> bool:
+```
+
+- **Parameters**:
+  - `address`: The Pepecoin address to check.
+  - `expected_amount`: The expected amount to be received.
+  - `min_confirmations`: Minimum number of confirmations required.
+- **Returns**: `True` if the expected amount has been received, `False` otherwise.
+
+### `mass_transfer`
+
+Transfer funds from multiple wallets to a target address.
+
+```
+def mass_transfer(
+    self,
+    from_wallets: List[str],
+    to_address: str,
+    passphrases: Optional[List[str]] = None
+) -> List[str]:
+```
+
+- **Parameters**:
+  - `from_wallets`: List of wallet names to transfer from.
+  - `to_address`: The target Pepecoin address to transfer funds to.
+  - `passphrases`: List of passphrases for the wallets (if encrypted).
+- **Returns**: List of transaction IDs.
 
 ---
 
-## **Deployment**
+## Security Considerations
 
-### **Docker Deployment**
-
-Use Docker to containerize the application for easier deployment.
-
-1. Build the Docker image:
-
-```bash
-docker build -t pepecoin-payment-gateway .
-```
-
-2. Run the container:
-
-```bash
-docker run -p 8000:8000 --env-file .env pepecoin-payment-gateway
-```
-
-### **Production Ready**
-
-- Use **Gunicorn** with Uvicorn workers for production.
-- Deploy behind a reverse proxy (e.g., Nginx) for SSL termination.
+- **Passphrases**: Never hardcode passphrases in your code. Use secure methods to store and retrieve them (e.g., environment variables, secure key management systems).
+- **RPC Credentials**: Protect your RPC credentials. Do not expose them in logs or version control.
+- **Wallet Encryption**: Always encrypt wallets that hold real funds.
+- **Node Security**: Ensure your Pepecoin node is secure, with proper firewall settings and access controls.
+- **SSL/TLS Encryption**: Consider using SSL/TLS for RPC communications.
 
 ---
 
-## **Contributing**
+## License
 
-Contributions are welcome! Follow these steps to contribute:
-
-1. Fork the repository.
-2. Create a new feature branch: `git checkout -b feature/my-feature`.
-3. Commit your changes: `git commit -m 'Add some feature'`.
-4. Push to the branch: `git push origin feature/my-feature`.
-5. Open a pull request.
+This project is licensed under the MIT License.
 
 ---
 
-## **License**
+## Contributing
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
-
----
-
-## **Acknowledgments**
-
-- Thanks to the **Pepecoin** community for blockchain insights.
-- Built with ❤️ using FastAPI.
+Contributions are welcome! Please open an issue or submit a pull request on GitHub.
 
 ---
 
+## Acknowledgments
 
+- [python-bitcoinrpc](https://github.com/jgarzik/python-bitcoinrpc) for providing the RPC client library.
 
+---
+
+**Note**: This client library is provided as-is. Use it at your own risk. Ensure that you understand the security implications of interacting with cryptocurrency nodes and wallets.

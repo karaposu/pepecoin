@@ -5,15 +5,39 @@ import os
 
 setup(
     name='pepecoin',  # Package name
-    version='0.0.0',  # Version of your package
+    version='0.0.1',  # Version of your package
     author='PEPE',  # Your name
 
-    description='Simple PEPECOIN payment gateway via FastAPI',  # Short description
+    scripts=[
+            'scripts/setup_pepecoin_node.sh',
+            'scripts/setup_pepecoin_node_macos.sh',
+            'scripts/virgin_vm.sh',
+        ],
+    data_files=[
+            # You can specify where to install the service file
+            # For example, installing it to /etc/systemd/system (requires sudo)
+            # Commented out because it may not be appropriate for all users
+            # ('/etc/systemd/system', ['scripts/pepecoind.service']),
+        ],
+    description='PEPECOIN class to interact with pepecoin blockchain in a easy way',  # Short description
     long_description=open('README.md').read(),  # Long description from a README file
     long_description_content_type='text/markdown',  # Type of the long description
-
+    entry_points={
+        'console_scripts': [
+            'pepecoin-monitor=pepecoin.cli:monitor_node',
+            'pepecoin-setup=pepecoin.cli:setup_node',
+            'pepecoin-setup-vm=pepecoin.cli:setup_vm',
+            'pepecoin-install-service=pepecoin.cli:install_service',
+        ],
+    },
     packages=find_packages(),  # Automatically find packages in the directory
-   # install_requires=[ ],
+    install_requires=['pydantic',
+                        'requests',
+                        'indented_logger',
+                        'pyyaml',
+                        'python-bitcoinrpc',
+                        'python-dotenv',
+                        'python-bitcoinrpc' ],
     classifiers=[
         'Development Status :: 3 - Alpha',  # Development status
         'Intended Audience :: Developers',
