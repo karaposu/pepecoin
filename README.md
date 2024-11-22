@@ -167,6 +167,19 @@ print(f"Mass transfer transaction IDs: {tx_ids}")
 
 
 
+# Future Improvements 
+
+- Synchronous vs. Asynchronous: The AuthServiceProxy class is synchronous. If we need asynchronous support, we might need to use an asynchronous RPC client or run synchronous code in a thread pool.
+
+
+
+
+
+
+
+
+
+
 
 
 ---
