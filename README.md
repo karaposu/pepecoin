@@ -2,6 +2,9 @@
 
 This repository is an independent project and is not affiliated with the official Pepecoin team (Yet this project uses the same pepecoin). For the official Pepecoin repository, please visit [Pepecoin Core](https://github.com/pepecoinppc/pepecoin).
 
+---Please with any third party libraries (like this one) always read the source code before running. Make it a habit.---
+
+
 <h1 align="center">
 <img src="https://raw.githubusercontent.com/karaposu/pepecoin/refs/heads/main/pepe_logo.png" alt="Pepecoin" width="300"/>
 <br/><br/>

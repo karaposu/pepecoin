@@ -5,14 +5,12 @@ import os
 
 setup(
     name='pepecoin',  # Package name
-    version='0.0.3',  # Version of your package
+    version='0.0.4',  # Version of your package
     author='PEPE',  # Your name
 
-    scripts=[
-            'scripts/setup_pepecoin_node.sh',
-            'scripts/setup_pepecoin_node_macos.sh',
-            'scripts/virgin_vm.sh',
-        ],
+    package_data={
+        'pepecoin': ['scripts/*.sh', 'scripts/*.service'],
+    },
     data_files=[
             # You can specify where to install the service file
             # For example, installing it to /etc/systemd/system (requires sudo)
