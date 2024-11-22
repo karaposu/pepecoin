@@ -1,6 +1,6 @@
 
 # Pepecoin Python Client 
-This repo is not official. Please visit official pepecoin repo here: https://github.com/pepecoinppc/pepecoin 
+This repository is an independent project and is not affiliated with the official Pepecoin team. For the official Pepecoin repository, please visit [Pepecoin Core](https://github.com/pepecoinppc/pepecoin).
 
 
 <h1 align="center">
