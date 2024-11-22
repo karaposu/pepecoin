@@ -22,12 +22,14 @@ setup(
     description='PEPECOIN class to interact with pepecoin blockchain in a easy way',  # Short description
     long_description=open('README.md').read(),  # Long description from a README file
     long_description_content_type='text/markdown',  # Type of the long description
+    include_package_data=True,
     entry_points={
         'console_scripts': [
             'pepecoin-monitor=pepecoin.cli:monitor_node',
             'pepecoin-setup=pepecoin.cli:setup_node',
-            'pepecoin-setup-vm=pepecoin.cli:setup_vm',
-            'pepecoin-install-service=pepecoin.cli:install_service',
+            'pepecoin-setup-macos=pepecoin.cli:setup_node_macos',  # Ensure this function exists
+            'pepecoin-setup-vm=pepecoin.cli:setup_vm',  # Ensure this function exists
+            'pepecoin-install-service=pepecoin.cli:install_service',  # Ensure this function exists
         ],
     },
     packages=find_packages(),  # Automatically find packages in the directory
