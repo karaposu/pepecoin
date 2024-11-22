@@ -5,7 +5,7 @@ import os
 
 setup(
     name='pepecoin',  # Package name
-    version='0.0.4',  # Version of your package
+    version='0.0.5',  # Version of your package
     author='PEPE',  # Your name
 
     package_data={
