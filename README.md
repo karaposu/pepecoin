@@ -1,12 +1,11 @@
 
-# Pepecoin Python Client 
-This repository is an independent project and is not affiliated with the official Pepecoin team. For the official Pepecoin repository, please visit [Pepecoin Core](https://github.com/pepecoinppc/pepecoin).
 
+This repository is an independent project and is not affiliated with the official Pepecoin team (Yet this project uses the same pepecoin). For the official Pepecoin repository, please visit [Pepecoin Core](https://github.com/pepecoinppc/pepecoin).
 
 <h1 align="center">
 <img src="https://raw.githubusercontent.com/karaposu/pepecoin/refs/heads/main/pepe_logo.png" alt="Pepecoin" width="300"/>
 <br/><br/>
-Pepecoin Core [PEPE, ₱]  
+Pepecoin Python Client  [₱]  
 </h1>
 
 Pepecoin Python Client is a python client library for easily interacting with a Pepecoin node (via RPC) and developing cool applications.
