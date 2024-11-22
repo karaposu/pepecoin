@@ -1,6 +1,14 @@
+Sure! I've reviewed your README and made some grammatical corrections and improvements for clarity. Here's the updated version:
+
+---
+
 # Pepecoin Python Client
 
-A Python client library for interacting with a Pepecoin node via RPC. The `Pepecoin` class provides a simplified interface for wallet management, address generation, balance checking, payment verification, node connection checking, wallet locking/unlocking, and mass transferring funds.
+A Python client library for easily interacting with a Pepecoin node (via RPC) and developing cool applications.
+
+If you want to check out a "Pepecoin Payment Gateway" example, check out this link: [Pepecoin FastAPI Payment Gateway](https://github.com/karaposu/pepecoin-fastapi-payment-gateway).
+
+The `Pepecoin` class provides a simplified interface for wallet management, address generation, balance checking, payment verification, node connection checking, wallet locking/unlocking, and mass transferring funds.
 
 ---
 
@@ -30,13 +38,26 @@ pip install pepecoin
 
 ### Prerequisites
 
-- if you havent went through the official setup process you can run `placeholder` 
-and a bash script will start the installation automatically. The script follow the steps in this 
-documentation  (https://github.com/pepecoinppc/pepecoin/blob/master/INSTALL.md). Feel free to inspect it. 
+- **Automatic Setup**: If you haven't gone through the official setup process, you can run the following command to start the installation automatically:
 
-- **Running Pepecoin Node**: You must have a Pepecoin node running with RPC enabled (check it by   ```pepecoind -daemon ``` from terminal)
-- **RPC Credentials**: Dont forget to add `RPC_USER` and `RPC_PASSWORD` in .env file
+  ```bash
+  pepecoin-setup
+  ```
 
+  This command will execute a bash script included in the Pepecoin package that follows the steps in the official [Pepecoin installation documentation](https://github.com/pepecoinppc/pepecoin/blob/master/INSTALL.md). Feel free to inspect the script before running it.
+it does these steps:  
+      1. Prompts you for rpc_user and rpc_password you wanna use. 
+      2. Download compiled binaries
+      3. Create pepecoin.conf
+      4. Add Pepecoin binaries to PATH
+      5. Start Pepecoin daemon
+      6. verify the daemon is indeed running 
+
+- **Running Pepecoin Node**: You must have a Pepecoin node running with RPC enabled (you can start it by running `pepecoind -daemon` from the terminal).
+
+- **RPC Credentials**: Don't forget to add `RPC_USER` and `RPC_PASSWORD` in your `.env` file.
+
+---
 
 ## Usage Examples
 
@@ -44,8 +65,9 @@ documentation  (https://github.com/pepecoinppc/pepecoin/blob/master/INSTALL.md).
 
 ```python
 from pepecoin import Pepecoin
-from dotenv import  load_dotenv
+from dotenv import load_dotenv
 import os
+
 load_dotenv()
 
 # Initialize the Pepecoin client
@@ -135,6 +157,12 @@ tx_ids = pepecoin.mass_transfer(
 )
 print(f"Mass transfer transaction IDs: {tx_ids}")
 ```
+
+---
+
+
+
+
 
 ---
 
