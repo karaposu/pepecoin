@@ -1,27 +1,34 @@
-# wallet.py
-
 from typing import List, Dict, Optional
-from pepecoin import Pepecoin
-from bitcoinrpc.authproxy import JSONRPCException
+from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 import logging
 
 # Configure logging
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 class Wallet:
-    def __init__(self, pepecoin_client: Pepecoin, wallet_name: str):
+    def __init__(
+        self,
+        rpc_user: str,
+        rpc_password: str,
+        host: str = '127.0.0.1',
+        port: int = 29373,
+        wallet_name: str = ''
+    ):
         """
         Initialize the Wallet instance.
 
-        :param pepecoin_client: An instance of the Pepecoin class for RPC interactions.
+        :param rpc_user: RPC username.
+        :param rpc_password: RPC password.
+        :param host: RPC host.
+        :param port: RPC port.
         :param wallet_name: The name of the wallet to manage.
         """
-        self.pepecoin = pepecoin_client
         self.wallet_name = wallet_name
-        self.wallet_rpc = self.pepecoin.get_wallet_rpc(wallet_name)
-        logger.debug(f"Initialized Wallet for '{self.wallet_name}'.")
+        rpc_url = f"http://{rpc_user}:{rpc_password}@{host}:{port}/wallet/{wallet_name}"
+        self.wallet_rpc = AuthServiceProxy(rpc_url)
+        logger.debug(f"Initialized Wallet RPC connection for '{self.wallet_name}'.")
 
     # ------------------------- Wallet Management -------------------------
 
@@ -32,7 +39,7 @@ class Wallet:
         :raises JSONRPCException: If the RPC call fails.
         """
         try:
-            self.pepecoin.lock_wallet(self.wallet_name)
+            self.wallet_rpc.walletlock()
             logger.info(f"Wallet '{self.wallet_name}' locked successfully.")
         except JSONRPCException as e:
             logger.error(f"Failed to lock wallet '{self.wallet_name}': {e}")
@@ -48,10 +55,30 @@ class Wallet:
         :raises JSONRPCException: If the RPC call fails.
         """
         try:
-            self.pepecoin.unlock_wallet(self.wallet_name, passphrase, timeout)
+            self.wallet_rpc.walletpassphrase(passphrase, timeout)
             logger.info(f"Wallet '{self.wallet_name}' unlocked successfully for {timeout} seconds.")
         except JSONRPCException as e:
             logger.error(f"Failed to unlock wallet '{self.wallet_name}': {e}")
+            raise e
+
+    # ------------------------- Balance Management -------------------------
+
+    def get_balance(self, min_confirmations: int = 1, include_watchonly: bool = False) -> float:
+        """
+        Get the wallet's balance.
+
+        :param min_confirmations: Minimum number of confirmations.
+        :param include_watchonly: Include watch-only addresses.
+
+        :return: The wallet balance.
+        :raises JSONRPCException: If the RPC call fails.
+        """
+        try:
+            balance = self.wallet_rpc.getbalance("*", min_confirmations, include_watchonly)
+            logger.info(f"Wallet '{self.wallet_name}' balance: {balance} PEPE.")
+            return balance
+        except JSONRPCException as e:
+            logger.error(f"Failed to get balance for wallet '{self.wallet_name}': {e}")
             raise e
 
     # ------------------------- Address Management -------------------------
@@ -66,7 +93,7 @@ class Wallet:
         :raises JSONRPCException: If the RPC call fails.
         """
         try:
-            address = self.pepecoin.generate_new_address(label)
+            address = self.wallet_rpc.getnewaddress(label)
             logger.info(f"Generated new address '{address}' with label '{label}'.")
             return address
         except JSONRPCException as e:
@@ -84,10 +111,14 @@ class Wallet:
         """
         try:
             if label:
-                addresses = self.wallet_rpc.getaddressesbylabel(label)
+                addresses = list(self.wallet_rpc.getaddressesbylabel(label).keys())
                 logger.info(f"Retrieved addresses with label '{label}': {addresses}")
             else:
-                addresses = self.wallet_rpc.getaddressesbylabel("")
+                # Get all labels and their addresses
+                labels = self.wallet_rpc.listlabels()
+                addresses = []
+                for lbl in labels:
+                    addresses.extend(list(self.wallet_rpc.getaddressesbylabel(lbl).keys()))
                 logger.info(f"Retrieved all addresses: {addresses}")
             return addresses
         except JSONRPCException as e:
@@ -96,7 +127,12 @@ class Wallet:
 
     # ------------------------- Transaction Management -------------------------
 
-    def list_transactions(self, count: int = 10, skip: int = 0, include_watchonly: bool = False) -> List[Dict]:
+    def list_transactions(
+        self,
+        count: int = 10,
+        skip: int = 0,
+        include_watchonly: bool = False
+    ) -> List[Dict]:
         """
         List recent transactions.
 
@@ -115,7 +151,13 @@ class Wallet:
             logger.error(f"Failed to list transactions: {e}")
             raise e
 
-    def send_to_address(self, address: str, amount: float, comment: str = "", comment_to: str = "") -> str:
+    def send_to_address(
+        self,
+        address: str,
+        amount: float,
+        comment: str = "",
+        comment_to: str = ""
+    ) -> str:
         """
         Send PEPE to a specified address.
 
@@ -135,31 +177,34 @@ class Wallet:
             logger.error(f"Failed to send to address '{address}': {e}")
             raise e
 
-    def mass_transfer(self, recipients: Dict[str, float], fee: float = 0.0) -> List[str]:
+    def mass_transfer(self, recipients: Dict[str, float]) -> List[str]:
         """
         Send funds to multiple recipients.
 
         :param recipients: Dictionary mapping addresses to amounts.
-        :param fee: Transaction fee (optional, not used in this implementation).
         :return: List of transaction IDs.
 
         :raises JSONRPCException: If any RPC call fails.
         """
         tx_ids = []
-        for address, amount in recipients.items():
-            try:
+        try:
+            for address, amount in recipients.items():
                 tx_id = self.send_to_address(address, amount)
                 tx_ids.append(tx_id)
                 logger.info(f"Mass transfer: Sent {amount} PEPE to '{address}'. Transaction ID: {tx_id}")
-            except JSONRPCException as e:
-                logger.error(f"Mass transfer failed for address '{address}': {e}")
-                # Optionally, continue or abort based on requirements
-                raise e
-        return tx_ids
+            return tx_ids
+        except JSONRPCException as e:
+            logger.error(f"Mass transfer failed: {e}")
+            raise e
 
     # ------------------------- Key Management -------------------------
 
-    def import_private_key(self, private_key: str, label: str = "", rescan: bool = True) -> None:
+    def import_private_key(
+        self,
+        private_key: str,
+        label: str = "",
+        rescan: bool = True
+    ) -> None:
         """
         Import a private key into the wallet.
 
@@ -171,7 +216,7 @@ class Wallet:
         """
         try:
             self.wallet_rpc.importprivkey(private_key, label, rescan)
-            logger.info(f"Imported private key '{private_key}' with label '{label}'. Rescan: {rescan}")
+            logger.info(f"Imported private key for label '{label}'. Rescan: {rescan}")
         except JSONRPCException as e:
             logger.error(f"Failed to import private key: {e}")
             raise e
@@ -221,7 +266,7 @@ class Wallet:
         :raises JSONRPCException: If the RPC call fails.
         """
         try:
-            address_info = self.wallet_rpc.validateaddress(address)
+            address_info = self.wallet_rpc.getaddressinfo(address)
             label = address_info.get('label', '')
             logger.info(f"Retrieved label '{label}' for address '{address}'.")
             return label
@@ -297,4 +342,47 @@ class Wallet:
             return address_info
         except JSONRPCException as e:
             logger.error(f"Failed to validate address '{address}': {e}")
+            raise e
+
+    # ------------------------- Payment Monitoring -------------------------
+
+    def check_payment(
+        self,
+        address: str,
+        expected_amount: float,
+        min_confirmations: int = 1
+    ) -> bool:
+        """
+        Check if a payment has been received at a specified address.
+
+        :param address: The Pepecoin address to check.
+        :param expected_amount: The expected amount to be received.
+        :param min_confirmations: Minimum number of confirmations required.
+
+        :return: True if the expected amount has been received, False otherwise.
+        :raises JSONRPCException: If the RPC call fails.
+        """
+        try:
+            amount_received = self.wallet_rpc.getreceivedbyaddress(address, min_confirmations)
+            logger.info(f"Amount received at address '{address}': {amount_received} PEPE.")
+            return amount_received >= expected_amount
+        except JSONRPCException as e:
+            logger.error(f"Failed to check payment for address '{address}': {e}")
+            raise e
+
+    # ------------------------- Utility Methods -------------------------
+
+    def get_wallet_info(self) -> Dict:
+        """
+        Get general information about the wallet.
+
+        :return: Wallet information.
+        :raises JSONRPCException: If the RPC call fails.
+        """
+        try:
+            info = self.wallet_rpc.getwalletinfo()
+            logger.info(f"Retrieved wallet info for '{self.wallet_name}'.")
+            return info
+        except JSONRPCException as e:
+            logger.error(f"Failed to get wallet info for '{self.wallet_name}': {e}")
             raise e
