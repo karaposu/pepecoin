@@ -5,7 +5,7 @@ import os
 
 setup(
     name='pepecoin',  # Package name
-    version='0.0.1',  # Version of your package
+    version='0.0.2',  # Version of your package
     author='PEPE',  # Your name
 
     scripts=[
@@ -22,7 +22,7 @@ setup(
     description='PEPECOIN class to interact with pepecoin blockchain in a easy way',  # Short description
     long_description=open('README.md').read(),  # Long description from a README file
     long_description_content_type='text/markdown',  # Type of the long description
-    include_package_data=True,
+    # include_package_data=True,
     entry_points={
         'console_scripts': [
             'pepecoin-monitor=pepecoin.cli:monitor_node',
