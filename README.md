@@ -9,8 +9,7 @@ This repository is an independent project and is not affiliated with the officia
 Pepecoin Core [PEPE, ₱]  
 </h1>
 
-
-A Python client library for easily interacting with a Pepecoin node (via RPC) and developing cool applications.
+Pepecoin Python Client is a python client library for easily interacting with a Pepecoin node (via RPC) and developing cool applications.
 
 If you want to check out a "Pepecoin Payment Gateway" example, check out this link: [Pepecoin FastAPI Payment Gateway](https://github.com/karaposu/pepecoin-fastapi-payment-gateway).
 
