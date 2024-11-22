@@ -37,7 +37,11 @@ Install the package via `pip`:
 
 ```bash
 pip install pepecoin
+
+# to install latest unstable version you can do this :
+# pip install -e git+https://github.com/karaposu/pepecoin.git#egg=pepecoin
 ```
+
 
 ---
 
