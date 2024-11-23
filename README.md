@@ -53,6 +53,10 @@ pip install pepecoin
 
   ```bash
   pepecoin-setup
+  
+  # for MacOS do:
+  # pepecoin-setup-macos
+  # beware that this will install many dependencies and build pepecoin binaries
   ```
 
   This command will execute a bash script included in the Pepecoin package that follows the steps in the official [Pepecoin installation documentation](https://github.com/pepecoinppc/pepecoin/blob/master/INSTALL.md). Feel free to inspect the script before running it.

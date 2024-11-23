@@ -5,8 +5,6 @@ set -e
 
 # Variables
 PEPECOIN_VERSION="1.0.1"  # Latest version
-PEPECOIN_DMG="pepecoin-${PEPECOIN_VERSION}-osx-unsigned.dmg"
-PEPECOIN_URL="https://github.com/pepecoinppc/pepecoin/releases/download/v${PEPECOIN_VERSION}/${PEPECOIN_DMG}"
 INSTALL_DIR="$HOME/pepecoin"
 DATA_DIR="$HOME/Library/Application Support/Pepecoin"
 RPC_PORT=33873  # Default RPC port for Pepecoin
@@ -15,74 +13,211 @@ echo "Starting Pepecoin node setup on macOS..."
 
 # Prompt user for RPC credentials
 read -p "Enter a username for RPC authentication: " RPC_USER
-read -s -p "Enter a strong password for RPC authentication: " RPC_PASSWORD
-echo
 
-# Create install directory
-mkdir -p "$INSTALL_DIR"
-
-# Check if DMG file already exists
-if [ -f "$INSTALL_DIR/$PEPECOIN_DMG" ]; then
-    echo "Pepecoin Core DMG already exists at $INSTALL_DIR/$PEPECOIN_DMG."
-    read -p "Do you want to redownload and replace it? (y/n): " REDOWNLOAD_DMG
-    if [ "$REDOWNLOAD_DMG" = "y" ] || [ "$REDOWNLOAD_DMG" = "Y" ]; then
-        echo "Redownloading Pepecoin Core DMG..."
-        curl -L -o "$INSTALL_DIR/$PEPECOIN_DMG" "$PEPECOIN_URL"
+# Prompt for password twice and check if they match
+while true; do
+    read -s -p "Enter a strong password for RPC authentication: " RPC_PASSWORD
+    echo
+    read -s -p "Confirm the password: " RPC_PASSWORD_CONFIRM
+    echo
+    if [ "$RPC_PASSWORD" == "$RPC_PASSWORD_CONFIRM" ]; then
+        echo "Passwords match."
+        break
     else
-        echo "Using existing Pepecoin Core DMG."
+        echo "Passwords do not match. Please try again."
     fi
-else
-    # Download Pepecoin Core DMG
-    echo "Downloading Pepecoin Core DMG..."
-    curl -L -o "$INSTALL_DIR/$PEPECOIN_DMG" "$PEPECOIN_URL"
-fi
+done
 
-# Check if Pepecoin-Qt.app is already installed
-if [ -d "/Applications/Pepecoin-Qt.app" ]; then
-    echo "Pepecoin-Qt.app is already installed in /Applications."
-    read -p "Do you want to redownload and replace it? (y/n): " REDOWNLOAD_APP
-    if [ "$REDOWNLOAD_APP" = "y" ] || [ "$REDOWNLOAD_APP" = "Y" ]; then
-        INSTALL_PEPECOIN_QT=true
-    else
-        INSTALL_PEPECOIN_QT=false
-        echo "Skipping installation of Pepecoin-Qt.app since it already exists."
-    fi
-else
-    INSTALL_PEPECOIN_QT=true
-fi
-
-if [ "$INSTALL_PEPECOIN_QT" = true ]; then
-    # Mount the DMG
-    echo "Mounting DMG..."
-    hdiutil attach "$INSTALL_DIR/$PEPECOIN_DMG" -mountpoint /Volumes/Pepecoin
-
-    # Copy Pepecoin Core application to Applications folder
-    echo "Copying Pepecoin Core to Applications folder..."
-    cp -r /Volumes/Pepecoin/Pepecoin-Qt.app /Applications/
-
-    # Unmount the DMG
-    echo "Unmounting DMG..."
-    hdiutil detach /Volumes/Pepecoin
-fi
-
-# Copy pepecoind and pepecoin-cli to install directory
-echo "Copying pepecoind and pepecoin-cli to $INSTALL_DIR/bin..."
-mkdir -p "$INSTALL_DIR/bin"
-if [ -f "/Applications/Pepecoin-Qt.app/Contents/MacOS/pepecoind" ] && [ -f "/Applications/Pepecoin-Qt.app/Contents/MacOS/pepecoin-cli" ]; then
-    cp /Applications/Pepecoin-Qt.app/Contents/MacOS/pepecoind "$INSTALL_DIR/bin/"
-    cp /Applications/Pepecoin-Qt.app/Contents/MacOS/pepecoin-cli "$INSTALL_DIR/bin/"
-    chmod +x "$INSTALL_DIR/bin/pepecoind" "$INSTALL_DIR/bin/pepecoin-cli"
-else
-    echo "pepecoind and pepecoin-cli not found in Pepecoin-Qt.app."
-    echo "Please ensure that the Pepecoin Core installation includes these files."
+# Install Xcode command line tools if not installed
+if ! xcode-select -p &>/dev/null; then
+    echo "Installing Xcode command line tools..."
+    xcode-select --install
+    echo "Please complete the installation of Xcode command line tools and rerun this script."
     exit 1
 fi
 
-# Add Pepecoin binaries to PATH
-echo "Adding Pepecoin binaries to PATH..."
-export PATH="$INSTALL_DIR/bin:$PATH"
-echo 'export PATH="'$INSTALL_DIR'/bin:$PATH"' >> "$HOME/.bash_profile"
-echo 'export PATH="'$INSTALL_DIR'/bin:$PATH"' >> "$HOME/.zshrc"
+# Install Homebrew if not installed
+if ! command -v brew &>/dev/null; then
+    echo "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+fi
+
+# Update Homebrew
+echo "Updating Homebrew..."
+brew update
+
+# Install dependencies
+echo "Installing dependencies..."
+brew install automake libtool boost miniupnpc pkg-config protobuf qt libevent berkeley-db@5 librsvg
+
+# Set OpenSSL, Berkeley DB, and Boost prefixes
+export OPENSSL_PREFIX="/usr/local/openssl-1.1.1w"
+export BERKELEY_DB_PREFIX="$(brew --prefix berkeley-db@5)"
+export BOOST_PREFIX="$(brew --prefix boost)"
+
+# Validate OpenSSL installation
+if [ ! -f "${OPENSSL_PREFIX}/bin/openssl" ]; then
+    echo "Error: OpenSSL not found at ${OPENSSL_PREFIX}. Please ensure OpenSSL is installed correctly."
+    exit 1
+fi
+
+# Display OpenSSL version
+echo "Using OpenSSL version:"
+"${OPENSSL_PREFIX}/bin/openssl" version
+
+# Validate Boost installation
+if [ ! -d "${BOOST_PREFIX}/include/boost" ]; then
+    echo "Error: Boost not found at ${BOOST_PREFIX}. Please ensure Boost is installed correctly."
+    exit 1
+fi
+
+# Display Boost version
+BOOST_VERSION_HEADER="${BOOST_PREFIX}/include/boost/version.hpp"
+if [ -f "${BOOST_VERSION_HEADER}" ]; then
+    BOOST_VERSION=$(grep "#define BOOST_LIB_VERSION" "${BOOST_VERSION_HEADER}" | awk '{print $3}' | tr -d '"')
+    echo "Using Boost version: ${BOOST_VERSION}"
+else
+    echo "Could not determine Boost version."
+fi
+
+# Set environment variables
+export LDFLAGS="-L${OPENSSL_PREFIX}/lib -L${BERKELEY_DB_PREFIX}/lib -L${BOOST_PREFIX}/lib"
+export CPPFLAGS="-I${OPENSSL_PREFIX}/include -I${BERKELEY_DB_PREFIX}/include -I${BOOST_PREFIX}/include -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS -DMAC_OSX -DOBJC_OLD_DISPATCH_PROTOTYPES=0"
+export PKG_CONFIG_PATH="${OPENSSL_PREFIX}/lib/pkgconfig"
+export BOOST_ROOT="${BOOST_PREFIX}"
+export CXXFLAGS="-std=c++14 -Wno-deprecated-declarations"
+
+# Remove conflicting include paths
+if [[ "$CPPFLAGS" == *"/opt/local/include"* ]]; then
+    echo "Removing conflicting include path /opt/local/include from CPPFLAGS."
+    export CPPFLAGS="${CPPFLAGS//-I\/opt\/local\/include/}"
+fi
+
+# Verify that /opt/local/include is not in CPPFLAGS
+if [[ "$CPPFLAGS" == *"/opt/local/include"* ]]; then
+    echo "Error: Conflicting include path /opt/local/include still present in CPPFLAGS."
+    exit 1
+fi
+
+# Create install directory
+mkdir -p "$INSTALL_DIR"
+cd "$INSTALL_DIR"
+
+# Clone Pepecoin source code
+if [ -d "$INSTALL_DIR/pepecoin" ]; then
+    echo "Pepecoin source code already exists at $INSTALL_DIR/pepecoin."
+    read -p "Do you want to re-clone and replace it? (y/n): " RECLONE
+    if [[ "$RECLONE" =~ ^[Yy]$ ]]; then
+        echo "Removing existing source code..."
+        rm -rf "$INSTALL_DIR/pepecoin"
+        echo "Cloning Pepecoin source code..."
+        git clone https://github.com/pepecoinppc/pepecoin.git
+    else
+        echo "Using existing Pepecoin source code."
+    fi
+else
+    echo "Cloning Pepecoin source code..."
+    git clone https://github.com/pepecoinppc/pepecoin.git
+fi
+
+cd pepecoin
+
+# Apply patches to replace deprecated Boost filesystem functions
+echo "Applying Boost filesystem patches..."
+
+# Correct the handling of walletFile in wallet.cpp
+sed -i '' 's/boost::filesystem::basename(\([^)]*\))/boost::filesystem::path(\1).stem().string()/g' src/wallet/wallet.cpp
+sed -i '' 's/boost::filesystem::extension(\([^)]*\))/boost::filesystem::path(\1).extension().string()/g' src/wallet/wallet.cpp
+
+
+
+## Replace 'copy_option::overwrite_if_exists' with 'copy_options::overwrite_existing'
+sed -i '' 's/boost::filesystem::copy_option::overwrite_if_exists/boost::filesystem::copy_options::overwrite_existing/g' src/wallet/wallet.cpp
+sed -i '' 's/\bboost::filesystem::copy_option::overwrite_if_exists\b/boost::filesystem::copy_options::overwrite_existing/g' src/wallet/wallet.cpp
+#
+
+## Replace any remaining 'boost::filesystem::copy_option' with 'boost::filesystem::copy_options'
+#sed -i '' 's/\bboost::filesystem::copy_option\b/boost::filesystem::copy_options/g' src/wallet/wallet.cpp
+#
+#
+#
+## Replace 'copy_option::overwrite_if_exists' with 'copy_options::overwrite_existing'
+#
+#
+## Replace 'copy_option' with 'copy_options' only if not already modified
+#sed -i '' '/copy_options::overwrite_existing/!s/\bboost::filesystem::copy_option\b/boost::filesystem::copy_options/g' src/wallet/wallet.cpp
+## Remove previous attempt to replace random_shuffle
+## No need to replace random_shuffle if we suppress the deprecation warning
+
+# Apply patches to replace is_complete() with is_absolute()
+echo "Applying patches to replace is_complete() with is_absolute()..."
+FILES_WITH_IS_COMPLETE=$(grep -rl "is_complete()" src/ || true)
+if [ -n "$FILES_WITH_IS_COMPLETE" ]; then
+    for FILE in $FILES_WITH_IS_COMPLETE; do
+        sed -i '' 's/\.is_complete()/\.is_absolute()/g' "$FILE"
+        echo "Patched $FILE"
+    done
+    echo "All patches applied successfully."
+else
+    echo "No patches needed. Code already uses is_absolute()."
+fi
+
+# Validation 1: Check if <list> header is included
+VALIDATION_H="src/validation.h"
+if ! grep -q "#include <list>" "$VALIDATION_H"; then
+    echo "Adding #include <list> to $VALIDATION_H"
+    sed -i '' '/#include <vector>/a\
+#include <list>
+' "$VALIDATION_H"
+fi
+
+# Validate that <list> is now included
+if ! grep -q "#include <list>" "$VALIDATION_H"; then
+    echo "Error: Failed to include <list> in $VALIDATION_H"
+    exit 1
+fi
+
+# Clean previous builds if Makefile exists
+if [ -f Makefile ]; then
+    make clean
+fi
+
+# Build Pepecoin Core
+echo "Building Pepecoin Core..."
+
+# Use Clang as the compiler
+export CC=clang
+export CXX=clang++
+
+# Validation 2: Test compiler's ability to include C++ Standard Library headers
+echo "Checking compiler's ability to include C++ Standard Library headers..."
+echo '#include <list>
+int main() {
+    std::list<int> myList;
+    return 0;
+}' > test_std_list.cpp
+
+if ! $CXX $CXXFLAGS test_std_list.cpp -o test_std_list >/dev/null 2>&1; then
+    echo "Error: Compiler cannot compile a simple program using std::list."
+    rm -f test_std_list.cpp
+    exit 1
+fi
+rm -f test_std_list.cpp test_std_list
+echo "Compiler can include C++ Standard Library headers."
+
+./autogen.sh
+./configure --with-gui=no --disable-tests --with-boost="${BOOST_PREFIX}"
+make
+
+# Copy binaries to install directory
+echo "Copying binaries to $INSTALL_DIR/bin..."
+mkdir -p "$INSTALL_DIR/bin"
+cp src/pepecoind "$INSTALL_DIR/bin/"
+cp src/pepecoin-cli "$INSTALL_DIR/bin/"
+
+# Ensure binaries have execute permissions
+chmod +x "$INSTALL_DIR/bin/pepecoind"
+chmod +x "$INSTALL_DIR/bin/pepecoin-cli"
 
 # Create data directory
 mkdir -p "$DATA_DIR"
@@ -101,6 +236,21 @@ EOF
 
 echo "Configuration file created at $DATA_DIR/pepecoin.conf"
 
+# Add Pepecoin binaries to PATH (optional)
+echo "Adding Pepecoin binaries to PATH..."
+if [ -n "$BASH_VERSION" ]; then
+    SHELL_RC="$HOME/.bash_profile"
+elif [ -n "$ZSH_VERSION" ]; then
+    SHELL_RC="$HOME/.zshrc"
+else
+    SHELL_RC="$HOME/.profile"
+fi
+if ! grep -q 'export PATH="'$INSTALL_DIR'/bin:$PATH"' "$SHELL_RC"; then
+    echo 'export PATH="'$INSTALL_DIR'/bin:$PATH"' >> "$SHELL_RC"
+    echo "Please restart your terminal or run 'source $SHELL_RC' to update your PATH."
+fi
+export PATH="$INSTALL_DIR/bin:$PATH"
+
 # Start Pepecoin daemon
 echo "Starting Pepecoin daemon..."
 "$INSTALL_DIR/bin/pepecoind" -daemon
@@ -116,7 +266,9 @@ else
     exit 1
 fi
 
-echo "Pepecoin node setup completed successfully on macOS."
+echo "Pepecoin node setup completed successfully."
 
 
-# D0r!any3s!l24.
+
+
+
