@@ -49,7 +49,7 @@ pip install pepecoin
 
 ### Prerequisites
 
-- **Automatic Setup**: If you haven't gone through the official setup process, you can run the following command  (comes with pip install pepecoin ) to start the installation automatically:
+- **Automatic Setup**: If you haven't gone through the official pepecoin node setup process, you can run the following command  (comes bundled with "pip install pepecoin" ) to start the installation automatically:
 
   ```bash
   pepecoin-setup
