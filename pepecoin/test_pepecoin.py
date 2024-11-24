@@ -1,4 +1,4 @@
-# test_pepecoin.py
+# pepecoin/test_pepecoin.py
 
 import os
 import time
@@ -9,13 +9,14 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def test_pepecoin_class():
     # Initialize the Pepecoin node connection
     pepecoin_node = Pepecoin(
-        rpc_user=os.environ.get("RPC_USER", "your_rpc_username"),
-        rpc_password=os.environ.get("RPC_PASSWORD", "your_rpc_password"),
+        rpc_user=os.environ.get("RPC_USER", "karaposu"),
+        rpc_password=os.environ.get("RPC_PASSWORD", "sanane"),
         host="127.0.0.1",
-        port=29373  # Adjust if necessary
+        port=33873
     )
 
     # Test check_node_connection
@@ -38,10 +39,10 @@ def test_pepecoin_class():
     mempool_info = pepecoin_node.get_mempool_info()
     print(f"Mempool Info: {mempool_info}\n")
 
-    # Test get_node_uptime
-    print("Testing get_node_uptime...")
-    uptime = pepecoin_node.get_node_uptime()
-    print(f"Node Uptime: {uptime} seconds\n")
+    # # Test get_node_uptime
+    # print("Testing get_node_uptime...")
+    # uptime = pepecoin_node.get_node_uptime()
+    # print(f"Node Uptime: {uptime} seconds\n")
 
     # Test get_peer_info
     print("Testing get_peer_info...")
@@ -68,10 +69,10 @@ def test_pepecoin_class():
     block_info = pepecoin_node.get_block(block_hash)
     print(f"Block Info: {block_info}\n")
 
-    # Test estimate_smart_fee
-    print("Testing estimate_smart_fee...")
-    fee_estimate = pepecoin_node.estimate_smart_fee(conf_target=6)
-    print(f"Fee Estimate: {fee_estimate}\n")
+    # # Test estimate_smart_fee
+    # print("Testing estimate_smart_fee...")
+    # fee_estimate = pepecoin_node.estimate_smart_fee(conf_target=6)
+    # print(f"Fee Estimate: {fee_estimate}\n")
 
     # Test create_new_wallet
     print("Testing create_new_wallet...")
@@ -79,7 +80,7 @@ def test_pepecoin_class():
     passphrase = "secure_passphrase"
     wallet = pepecoin_node.create_new_wallet(
         wallet_name=wallet_name,
-        passphrase=passphrase
+        passphrase=passphrase,
     )
     if wallet:
         print(f"Wallet '{wallet.wallet_name}' created successfully.\n")

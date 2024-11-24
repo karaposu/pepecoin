@@ -72,6 +72,9 @@ it does these steps:
 
 - **RPC Credentials**: Don't forget to add `RPC_USER` and `RPC_PASSWORD` in your `.env` file.
 
+- It is important that you validate all is okay before moving forward. 
+Run `pepecoin-cli getblockchaininfo`  and if you dont see a json output go to installation_troubleshooting.md 
+
 ---
 
 ## Usage Examples
@@ -389,5 +392,9 @@ Contributions are welcome! Please open an issue or submit a pull request on GitH
 - [python-bitcoinrpc](https://github.com/jgarzik/python-bitcoinrpc) for providing the RPC client library.
 
 ---
+
+
+pepecoin-cli getblockchaininfo
+
 
 **Note**: This client library is provided as-is. Use it at your own risk. Ensure that you understand the security implications of interacting with cryptocurrency nodes and wallets.

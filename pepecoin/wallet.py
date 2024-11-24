@@ -1,3 +1,5 @@
+# pepecoin/wallet.py
+
 from typing import List, Dict, Optional
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 import logging

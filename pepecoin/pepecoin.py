@@ -1,7 +1,5 @@
 # pepecoin.py
 
-#
-
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from typing import Optional, Dict, List
 import logging
@@ -10,6 +8,7 @@ import time
 
 # Import the Wallet class
 from .wallet import Wallet
+
 
 # Configure logging
 logger = logging.getLogger(__name__)
