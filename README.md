@@ -77,6 +77,17 @@ Run `pepecoin-cli getblockchaininfo`  and if you dont see a json output go to in
 
 ---
 
+
+## Understanding the Limitations
+Pepecoin's Core Version: Pepecoin is based on an older version of Bitcoin Core (likely around 0.10.x), which does not support the createwallet RPC method or multi-wallet functionality introduced in Bitcoin Core 0.17.0.
+Single Wallet System: In this version, the node operates with a single wallet (wallet.dat) located in the data directory. There is no native support for managing multiple wallets via RPC calls.
+Although accounts are deprecated in later versions of Bitcoin Core, they are available in the version Pepecoin is based on. Accounts allow you to partition your wallet into multiple logical sections, effectively simulating multiple wallets.
+How Accounts Work
+Separate Balances: Each account maintains its own balance, separate from other accounts.
+Address Management: You can generate addresses associated with specific accounts.
+Transaction Tracking: Transactions can be attributed to specific accounts.
+
+
 ## Usage Examples
 
 ### Initialize the Pepecoin Client

@@ -103,114 +103,48 @@ class Pepecoin:
 
     # ------------------------- Wallet Management -------------------------
 
-    def generate_new_address(self, account=None):
+    def create_new_wallet(
+        self,
+        wallet_name: str,
+        passphrase: Optional[str] = None,
+        disable_private_keys: bool = False
+    ) -> Optional['Wallet']:
+        """
+        Create a new wallet and return a Wallet instance.
+        """
         try:
-            if account:
-                address = self.rpc_connection.getnewaddress(account)
-            else:
-                address = self.rpc_connection.getnewaddress()
-            logger.info(f"Generated new address '{address}' for account '{account}'.")
-            return address
+            # Check if wallet already exists
+            existing_wallets = self.rpc_connection.listwalletdir()['wallets']
+            wallet_paths = [wallet['name'] for wallet in existing_wallets]
+            if wallet_name in wallet_paths:
+                logger.warning(f"Wallet '{wallet_name}' already exists.")
+                return self.get_wallet(wallet_name)
+
+            self.rpc_connection.createwallet(wallet_name, disable_private_keys=disable_private_keys)
+            logger.info(f"Wallet '{wallet_name}' created successfully.")
+            wallet_rpc = self.get_wallet_rpc(wallet_name)
+            if passphrase:
+                # Encrypt the wallet
+                wallet_rpc.encryptwallet(passphrase)
+                logger.info(f"Wallet '{wallet_name}' encrypted successfully.")
+                # Need to re-initialize the wallet RPC connection after encryption
+                time.sleep(2)  # Wait for the wallet to be fully encrypted and reloaded
+                wallet_rpc = self.get_wallet_rpc(wallet_name)
+
+            # Create a Wallet instance
+            wallet = Wallet(
+                rpc_user=self.rpc_user,
+                rpc_password=self.rpc_password,
+                host=self.host,
+                port=self.port,
+                wallet_name=wallet_name
+            )
+            # Store the Wallet instance for future use
+            self.wallets[wallet_name] = wallet
+            return wallet
         except JSONRPCException as e:
-            logger.error(f"Failed to generate new address: {e}")
+            logger.error(f"Error creating wallet '{wallet_name}': {e}")
             return None
-
-    def get_balance(self, account=None):
-        try:
-            if account:
-                balance = self.rpc_connection.getbalance(account)
-                logger.info(f"Balance for account '{account}': {balance} PEPE")
-            else:
-                balance = self.rpc_connection.getbalance()
-                logger.info(f"Total wallet balance: {balance} PEPE")
-            return balance
-        except JSONRPCException as e:
-            logger.error(f"Failed to get balance: {e}")
-            return None
-
-    def send_from(self, from_account, to_address, amount, minconf=1, comment=None, comment_to=None):
-        try:
-            tx_id = self.rpc_connection.sendfrom(from_account, to_address, amount, minconf, comment, comment_to)
-            logger.info(f"Sent {amount} PEPE from '{from_account}' to '{to_address}'. Transaction ID: {tx_id}")
-            return tx_id
-        except JSONRPCException as e:
-            logger.error(f"Failed to send from '{from_account}': {e}")
-            return None
-
-    def move(self, from_account, to_account, amount, minconf=1, comment=None):
-        try:
-            result = self.rpc_connection.move(from_account, to_account, amount, minconf, comment)
-            if result:
-                logger.info(f"Moved {amount} PEPE from '{from_account}' to '{to_account}'.")
-            else:
-                logger.warning(f"Move operation returned False.")
-            return result
-        except JSONRPCException as e:
-            logger.error(f"Failed to move funds: {e}")
-            return False
-
-    def list_accounts(self, minconf=1, include_watchonly=False):
-        try:
-            accounts = self.rpc_connection.listaccounts(minconf, include_watchonly)
-            logger.info("Retrieved list of accounts.")
-            return accounts
-        except JSONRPCException as e:
-            logger.error(f"Failed to list accounts: {e}")
-            return {}
-
-    # def create_new_wallet(
-    #     self,
-    #     wallet_name: str,
-    #     passphrase: Optional[str] = None,
-    #     disable_private_keys: bool = False
-    # ) -> Optional['Wallet']:
-    #     """
-    #     Create a new wallet and return a Wallet instance.
-    #     """
-    #     try:
-    #         # Check if 'createwallet' method is available
-    #         rpc_methods = self.rpc_connection.help().split('\n')
-    #         if 'createwallet' not in rpc_methods:
-    #             logger.error("The 'createwallet' RPC method is not available on this node.")
-    #             return None
-    #     except JSONRPCException as e:
-    #         logger.error(f"Error creating wallet '{wallet_name}': {e}")
-    #         return None
-    #
-    #
-    #     try:
-    #         # Check if wallet already exists
-    #         existing_wallets = self.rpc_connection.listwalletdir()['wallets']
-    #         wallet_paths = [wallet['name'] for wallet in existing_wallets]
-    #         if wallet_name in wallet_paths:
-    #             logger.warning(f"Wallet '{wallet_name}' already exists.")
-    #             return self.get_wallet(wallet_name)
-    #
-    #         self.rpc_connection.createwallet(wallet_name, disable_private_keys=disable_private_keys)
-    #         logger.info(f"Wallet '{wallet_name}' created successfully.")
-    #         wallet_rpc = self.get_wallet_rpc(wallet_name)
-    #         if passphrase:
-    #             # Encrypt the wallet
-    #             wallet_rpc.encryptwallet(passphrase)
-    #             logger.info(f"Wallet '{wallet_name}' encrypted successfully.")
-    #             # Need to re-initialize the wallet RPC connection after encryption
-    #             time.sleep(2)  # Wait for the wallet to be fully encrypted and reloaded
-    #             wallet_rpc = self.get_wallet_rpc(wallet_name)
-    #
-    #         # Create a Wallet instance
-    #         wallet = Wallet(
-    #             rpc_user=self.rpc_user,
-    #             rpc_password=self.rpc_password,
-    #             host=self.host,
-    #             port=self.port,
-    #             wallet_name=wallet_name
-    #         )
-    #         # Store the Wallet instance for future use
-    #         self.wallets[wallet_name] = wallet
-    #         return wallet
-    #     except JSONRPCException as e:
-    #         logger.error(f"Error creating wallet '{wallet_name}': {e}")
-    #         return None
 
     def load_wallet(self, wallet_name: str) -> Optional['Wallet']:
         """
