@@ -1,18 +1,20 @@
 # pepecoin.py
 
+from indented_logger import setup_logging
+import logging
+setup_logging(level=logging.INFO, include_func=False, include_module=False)
+logger = logging.getLogger(__name__)
+
+
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from typing import Optional, Dict, List
 import logging
 import threading
 import time
 
-# Import the Wallet class
-from .wallet import Wallet
+# Import the Account class
+from .account import Account
 
-
-# Configure logging
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 
 class Pepecoin:
@@ -21,7 +23,7 @@ class Pepecoin:
         rpc_user: str,
         rpc_password: str,
         host: str = '127.0.0.1',
-        port: int = 29373,
+        port: int = 33873,
     ):
         """
         Initialize the Pepecoin node RPC connection.
@@ -31,7 +33,6 @@ class Pepecoin:
         self.host = host
         self.port = port
         self.rpc_connection = self.init_rpc()
-        self.wallets = {}  # Dictionary to store Wallet instances
         logger.debug("Initialized Pepecoin node RPC connection.")
 
     def init_rpc(self) -> AuthServiceProxy:
@@ -62,6 +63,24 @@ class Pepecoin:
         except JSONRPCException as e:
             logger.error(f"Node connection failed: {e}")
             return False
+
+    def is_sync_needed(self):
+        """Check if the node is synchronized with the network using internal information."""
+        try:
+            blockchain_info = self.rpc_connection.getblockchaininfo()
+            is_initial_download = blockchain_info.get('initialblockdownload', True)
+            verification_progress = blockchain_info.get('verificationprogress', 0)
+
+            if not is_initial_download and verification_progress >= 0.9999:
+                logger.info("Node is fully synchronized with the network.")
+                return False  # Sync is not needed
+            else:
+                logger.warning("Node is still syncing.")
+                logger.warning(f"Verification Progress: {verification_progress * 100:.2f}%")
+                return True  # Sync is needed
+        except Exception as e:
+            logger.error(f"Error checking synchronization status: {e}")
+            return True  # Assume sync is needed if there's an error
 
     def get_blockchain_info(self) -> Dict:
         """
@@ -101,116 +120,83 @@ class Pepecoin:
         # Run the monitor in a separate thread to avoid blocking
         threading.Thread(target=monitor, daemon=True).start()
 
-    # ------------------------- Wallet Management -------------------------
+    # ------------------------- Account Management -------------------------
 
-    def create_new_wallet(
-        self,
-        wallet_name: str,
-        passphrase: Optional[str] = None,
-        disable_private_keys: bool = False
-    ) -> Optional['Wallet']:
-        """
-        Create a new wallet and return a Wallet instance.
-        """
+    def generate_new_address(self, account=None):
+        if self.is_sync_needed():
+            logger.error("Node is not synchronized. Cannot generate a new address.")
+            raise Exception("Node is not synchronized with the network.")
+
         try:
-            # Check if wallet already exists
-            existing_wallets = self.rpc_connection.listwalletdir()['wallets']
-            wallet_paths = [wallet['name'] for wallet in existing_wallets]
-            if wallet_name in wallet_paths:
-                logger.warning(f"Wallet '{wallet_name}' already exists.")
-                return self.get_wallet(wallet_name)
-
-            self.rpc_connection.createwallet(wallet_name, disable_private_keys=disable_private_keys)
-            logger.info(f"Wallet '{wallet_name}' created successfully.")
-            wallet_rpc = self.get_wallet_rpc(wallet_name)
-            if passphrase:
-                # Encrypt the wallet
-                wallet_rpc.encryptwallet(passphrase)
-                logger.info(f"Wallet '{wallet_name}' encrypted successfully.")
-                # Need to re-initialize the wallet RPC connection after encryption
-                time.sleep(2)  # Wait for the wallet to be fully encrypted and reloaded
-                wallet_rpc = self.get_wallet_rpc(wallet_name)
-
-            # Create a Wallet instance
-            wallet = Wallet(
-                rpc_user=self.rpc_user,
-                rpc_password=self.rpc_password,
-                host=self.host,
-                port=self.port,
-                wallet_name=wallet_name
-            )
-            # Store the Wallet instance for future use
-            self.wallets[wallet_name] = wallet
-            return wallet
+            if account:
+                address = self.rpc_connection.getnewaddress(account)
+            else:
+                address = self.rpc_connection.getnewaddress()
+            logger.info(f"Generated new address '{address}' for account '{account}'.")
+            return address
         except JSONRPCException as e:
-            logger.error(f"Error creating wallet '{wallet_name}': {e}")
+            logger.error(f"Failed to generate new address: {e}")
             return None
 
-    def load_wallet(self, wallet_name: str) -> Optional['Wallet']:
-        """
-        Load a wallet into the node and return a Wallet instance.
-        """
+    def get_balance(self, account=None):
         try:
-            self.rpc_connection.loadwallet(wallet_name)
-            logger.info(f"Wallet '{wallet_name}' loaded successfully.")
-            # Create a Wallet instance
-            wallet = Wallet(
-                rpc_user=self.rpc_user,
-                rpc_password=self.rpc_password,
-                host=self.host,
-                port=self.port,
-                wallet_name=wallet_name
-            )
-            # Store the Wallet instance for future use
-            self.wallets[wallet_name] = wallet
-            return wallet
+            if account:
+                balance = self.rpc_connection.getbalance(account)
+                logger.info(f"Balance for account '{account}': {balance} PEPE")
+            else:
+                balance = self.rpc_connection.getbalance()
+                logger.info(f"Total wallet balance: {balance} PEPE")
+            return balance
         except JSONRPCException as e:
-            logger.error(f"Error loading wallet '{wallet_name}': {e}")
+            logger.error(f"Failed to get balance: {e}")
             return None
 
-    def unload_wallet(self, wallet_name: str) -> bool:
-        """
-        Unload a wallet from the node.
-        """
+    def send_from(self, from_account, to_address, amount, minconf=1, comment=None, comment_to=None):
+        """Send funds from a specific account to an external address."""
+        if self.is_sync_needed():
+            logger.error("Node is not synchronized. Cannot proceed with sending funds.")
+            raise Exception("Node is not synchronized with the network.")
+
         try:
-            self.rpc_connection.unloadwallet(wallet_name)
-            logger.info(f"Wallet '{wallet_name}' unloaded successfully.")
-            # Remove the Wallet instance from the registry
-            if wallet_name in self.wallets:
-                del self.wallets[wallet_name]
-            return True
+            tx_id = self.rpc_connection.sendfrom(from_account, to_address, amount, minconf, comment, comment_to)
+            logger.info(f"Sent {amount} PEPE from '{from_account}' to '{to_address}'. Transaction ID: {tx_id}")
+            return tx_id
         except JSONRPCException as e:
-            logger.error(f"Error unloading wallet '{wallet_name}': {e}")
+            logger.error(f"Failed to send from '{from_account}': {e}")
+            return None
+
+    def move(self, from_account, to_account, amount, minconf=1, comment=None):
+        try:
+            result = self.rpc_connection.move(from_account, to_account, amount, minconf, comment)
+            if result:
+                logger.info(f"Moved {amount} PEPE from '{from_account}' to '{to_account}'.")
+            else:
+                logger.warning(f"Move operation returned False.")
+            return result
+        except JSONRPCException as e:
+            logger.error(f"Failed to move funds: {e}")
             return False
 
-    def list_wallets(self) -> List[str]:
-        """
-        List all loaded wallets.
-        """
+    def list_accounts(self, minconf=1, include_watchonly=False):
         try:
-            wallets = self.rpc_connection.listwallets()
-            logger.info(f"Retrieved list of wallets: {wallets}")
-            return wallets
+            accounts = self.rpc_connection.listaccounts(minconf, include_watchonly)
+            logger.info("Retrieved list of accounts.")
+            return accounts
         except JSONRPCException as e:
-            logger.error(f"Error listing wallets: {e}")
-            raise e
+            logger.error(f"Failed to list accounts: {e}")
+            return {}
 
-    def get_wallet(self, wallet_name: str) -> Optional['Wallet']:
+    def get_account(self, account_name: str) -> Account:
         """
-        Retrieve a Wallet instance for a given wallet name.
+        Retrieve an Account instance for a given account name.
         """
-        if wallet_name in self.wallets:
-            return self.wallets[wallet_name]
-        else:
-            # Attempt to load the wallet if not already loaded
-            return self.load_wallet(wallet_name)
-
-    def get_wallet_rpc(self, wallet_name: str) -> AuthServiceProxy:
-        """
-        Get an RPC connection for a specific wallet.
-        """
-        rpc_url = f"http://{self.rpc_user}:{self.rpc_password}@{self.host}:{self.port}/wallet/{wallet_name}"
-        return AuthServiceProxy(rpc_url)
+        return Account(
+            rpc_user=self.rpc_user,
+            rpc_password=self.rpc_password,
+            host=self.host,
+            port=self.port,
+            account_name=account_name
+        )
 
     # ------------------------- Network Information -------------------------
 
@@ -379,155 +365,112 @@ class Pepecoin:
             logger.error(f"Error retrieving raw transaction for TXID {txid}: {e}")
             raise e
 
-    # ------------------------- Additional Methods Integrated with Wallet Class -------------------------
+    # ------------------------- Additional Methods Integrated with Account Class -------------------------
 
-    def transfer_between_wallets(
+    def transfer_between_accounts(
         self,
-        from_wallet_name: str,
-        to_wallet_name: str,
+        from_account_name: str,
+        to_account_name: str,
         amount: float,
-        passphrase: Optional[str] = None,
         comment: str = ""
     ) -> Optional[str]:
         """
-        Transfer funds from one wallet to another.
+        Transfer funds from one account to another.
 
-        :param from_wallet_name: The name of the wallet to send funds from.
-        :param to_wallet_name: The name of the wallet to send funds to.
+        :param from_account_name: The name of the account to send funds from.
+        :param to_account_name: The name of the account to send funds to.
         :param amount: The amount to transfer.
-        :param passphrase: The passphrase for the sending wallet, if encrypted.
         :param comment: An optional comment for the transaction.
         :return: The transaction ID if successful, None otherwise.
         """
         try:
-            # Get Wallet instances
-            from_wallet = self.get_wallet(from_wallet_name)
-            to_wallet = self.get_wallet(to_wallet_name)
+            # Get Account instances
+            from_account = self.get_account(from_account_name)
+            to_account = self.get_account(to_account_name)
 
-            if not from_wallet or not to_wallet:
-                logger.error("One or both wallets could not be loaded.")
-                return None
+            # Generate a new address in the receiving account
+            to_address = to_account.generate_address()
 
-            # Generate a new address in the receiving wallet
-            to_address = to_wallet.generate_address()
-
-            # Unlock the sending wallet if passphrase is provided
-            if passphrase:
-                from_wallet.unlock_wallet(passphrase=passphrase, timeout=60)
-
-            # Send funds to the receiving wallet's address
-            tx_id = from_wallet.send_to_address(
-                address=to_address,
+            # Send funds to the receiving account's address
+            tx_id = self.send_from(
+                from_account=from_account_name,
+                to_address=to_address,
                 amount=amount,
                 comment=comment
             )
-            logger.info(f"Transferred {amount} PEPE from '{from_wallet_name}' to '{to_wallet_name}'. TXID: {tx_id}")
-
-            # Lock the sending wallet if it was unlocked
-            if passphrase:
-                from_wallet.lock_wallet()
-
+            logger.info(f"Transferred {amount} PEPE from account '{from_account_name}' to account '{to_account_name}'. TXID: {tx_id}")
             return tx_id
         except JSONRPCException as e:
-            logger.error(f"Error transferring funds between wallets: {e}")
+            logger.error(f"Error transferring funds between accounts: {e}")
             return None
 
-    def mass_transfer_from_wallets(
+    def mass_transfer_from_accounts(
         self,
-        from_wallet_names: List[str],
+        from_account_names: List[str],
         to_address: str,
-        amounts: List[float],
-        passphrases: Optional[List[str]] = None
+        amounts: List[float]
     ) -> List[str]:
         """
-        Transfer funds from multiple wallets to a single address.
+        Transfer funds from multiple accounts to a single address.
 
-        :param from_wallet_names: List of wallet names to transfer from.
+        :param from_account_names: List of account names to transfer from.
         :param to_address: The target Pepecoin address to transfer funds to.
-        :param amounts: List of amounts corresponding to each wallet.
-        :param passphrases: List of passphrases for the wallets (if encrypted).
+        :param amounts: List of amounts corresponding to each account.
         :return: List of transaction IDs.
         """
         tx_ids = []
         try:
-            for idx, wallet_name in enumerate(from_wallet_names):
+            for idx, account_name in enumerate(from_account_names):
                 amount = amounts[idx]
-                passphrase = passphrases[idx] if passphrases and idx < len(passphrases) else None
-                from_wallet = self.get_wallet(wallet_name)
+                from_account = self.get_account(account_name)
 
-                if not from_wallet:
-                    logger.error(f"Wallet '{wallet_name}' could not be loaded.")
-                    continue
-
-                if passphrase:
-                    from_wallet.unlock_wallet(passphrase=passphrase, timeout=60)
-
-                tx_id = from_wallet.send_to_address(
-                    address=to_address,
+                tx_id = self.send_from(
+                    from_account=account_name,
+                    to_address=to_address,
                     amount=amount
                 )
                 tx_ids.append(tx_id)
-                logger.info(f"Transferred {amount} PEPE from '{wallet_name}' to '{to_address}'. TXID: {tx_id}")
-
-                if passphrase:
-                    from_wallet.lock_wallet()
+                logger.info(f"Transferred {amount} PEPE from account '{account_name}' to '{to_address}'. TXID: {tx_id}")
 
             return tx_ids
         except JSONRPCException as e:
-            logger.error(f"Error in mass transfer from wallets: {e}")
+            logger.error(f"Error in mass transfer from accounts: {e}")
             return tx_ids
 
-    def consolidate_wallets(
+    def consolidate_accounts(
         self,
-        source_wallet_names: List[str],
-        destination_wallet_name: str,
-        passphrases: Optional[List[str]] = None
+        source_account_names: List[str],
+        destination_account_name: str
     ) -> List[str]:
         """
-        Consolidate funds from multiple wallets into a single wallet.
+        Consolidate funds from multiple accounts into a single account.
 
-        :param source_wallet_names: List of wallet names to transfer from.
-        :param destination_wallet_name: The wallet name to receive the funds.
-        :param passphrases: List of passphrases for the source wallets (if encrypted).
+        :param source_account_names: List of account names to transfer from.
+        :param destination_account_name: The account name to receive the funds.
         :return: List of transaction IDs.
         """
         tx_ids = []
         try:
-            destination_wallet = self.get_wallet(destination_wallet_name)
-            if not destination_wallet:
-                logger.error(f"Destination wallet '{destination_wallet_name}' could not be loaded.")
-                return tx_ids
+            destination_account = self.get_account(destination_account_name)
+            destination_address = destination_account.generate_address()
 
-            destination_address = destination_wallet.generate_address()
-
-            for idx, wallet_name in enumerate(source_wallet_names):
-                passphrase = passphrases[idx] if passphrases and idx < len(passphrases) else None
-                source_wallet = self.get_wallet(wallet_name)
-
-                if not source_wallet:
-                    logger.error(f"Source wallet '{wallet_name}' could not be loaded.")
-                    continue
-
-                if passphrase:
-                    source_wallet.unlock_wallet(passphrase=passphrase, timeout=60)
-
-                balance = source_wallet.get_balance()
+            for account_name in source_account_names:
+                source_account = self.get_account(account_name)
+                balance = self.get_balance(account_name)
                 if balance > 0:
-                    tx_id = source_wallet.send_to_address(
-                        address=destination_address,
+                    tx_id = self.send_from(
+                        from_account=account_name,
+                        to_address=destination_address,
                         amount=balance
                     )
                     tx_ids.append(tx_id)
-                    logger.info(f"Consolidated {balance} PEPE from '{wallet_name}' to '{destination_wallet_name}'. TXID: {tx_id}")
+                    logger.info(f"Consolidated {balance} PEPE from account '{account_name}' to '{destination_account_name}'. TXID: {tx_id}")
                 else:
-                    logger.info(f"No balance to transfer from wallet '{wallet_name}'.")
-
-                if passphrase:
-                    source_wallet.lock_wallet()
+                    logger.info(f"No balance to transfer from account '{account_name}'.")
 
             return tx_ids
         except JSONRPCException as e:
-            logger.error(f"Error consolidating wallets: {e}")
+            logger.error(f"Error consolidating accounts: {e}")
             return tx_ids
 
     # ------------------------- Node Control Methods -------------------------
