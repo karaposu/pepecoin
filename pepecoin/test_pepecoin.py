@@ -14,11 +14,12 @@ logger = logging.getLogger(__name__)
 def test_pepecoin_class():
     # Initialize the Pepecoin node connection
     pepecoin_node = Pepecoin(
-        rpc_user=os.environ.get("RPC_USER", "your_rpc_user"),
-        rpc_password=os.environ.get("RPC_PASSWORD", "your_rpc_password"),
+        rpc_user=os.environ.get("RPC_USER", "karaposu"),
+        rpc_password=os.environ.get("RPC_PASSWORD", "sanane"),
         host="127.0.0.1",
         port=33873
     )
+
 
     # Test check_node_connection
     logger.info("Testing check_node_connection...")
