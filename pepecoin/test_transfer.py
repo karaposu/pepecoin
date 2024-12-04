@@ -1,13 +1,15 @@
 # test_transfer.py
 
+from indented_logger import setup_logging
 import logging
+setup_logging(level=logging.INFO, include_func=False, include_module=False)
+logger = logging.getLogger(__name__)
+
 import sys
 import time
 from pepecoin import Pepecoin
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+
 
 def main():
     # Initialize Pepecoin node connection
@@ -30,14 +32,15 @@ def main():
         logger.error("Node is not synchronized. Please wait until synchronization is complete.")
         sys.exit(1)
 
-    # Define source account and receiving address
+    # Define source and destination accounts
     source_account_name = 'source_account'
-    receiving_address = 'Ps8YKEQdZA9aBYmYGSye7Q6yLYir4zMEp5'  # Your consistent test address
+    destination_account_name = 'destination_account'
 
     # Get the source account
     source_account = pepecoin_node.get_account(source_account_name)
 
     # Check balance of source account
+    logger.info(f"--------------------------------")
     logger.info(f"Retrieving balance for account '{source_account_name}'...")
     balance = pepecoin_node.get_balance(source_account_name)
     if balance is None:
@@ -45,15 +48,21 @@ def main():
         sys.exit(1)
 
     if balance <= 0:
-        logger.error(f"Source account '{source_account_name}' has insufficient balance ({balance} PEPE).")
-        logger.error(f"Please send funds to the source account address to proceed with the test.")
-        # Optionally, print an address to send funds to
+        # Get or generate an address for the source account to receive funds
         source_addresses = source_account.list_addresses()
+
         if source_addresses:
-            logger.info(f"Send funds to the following address: {source_addresses[0]}")
+            funding_address = source_addresses[0]
+            logger.info(f"You should send pepecoin to this already existing address: {funding_address}")
         else:
-            new_address = source_account.generate_address()
-            logger.info(f"Generated new address for receiving funds: {new_address}")
+            funding_address = source_account.generate_address()
+            logger.info(f"Generated new address for receiving funds: {funding_address}")
+
+        logger.error(f"Source account '{source_account_name}' has insufficient balance ({balance} PEPE).")
+        logger.error(f"To test Pepecoin transfer functionality, you must have funds in the '{source_account_name}' account, which you currently do not.")
+        logger.info(f"Please send some Pepecoin to the following address to fund your account:\n\n{funding_address}\n")
+        logger.error("We did not generate a destination address for you. Once your source account has some funds, you can rerun this script to continue testing the transfer functionality.")
+        logger.error("Skipping the transfer step due to insufficient funds.")
         sys.exit(1)
 
     # Define amount to transfer
@@ -62,6 +71,13 @@ def main():
     if balance < amount_to_transfer:
         logger.error(f"Source account '{source_account_name}' has insufficient balance to transfer {amount_to_transfer} PEPE.")
         sys.exit(1)
+
+    # Get the destination account
+    destination_account = pepecoin_node.get_account(destination_account_name)
+
+    # Generate a receiving address for the destination account
+    receiving_address = destination_account.generate_address()
+    logger.info(f"Receiving address for account '{destination_account_name}': {receiving_address}")
 
     # Perform the transfer
     logger.info(f"Initiating transfer of {amount_to_transfer} PEPE from account '{source_account_name}' to address '{receiving_address}'...")

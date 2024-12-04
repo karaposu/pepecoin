@@ -1,5 +1,11 @@
 # pepecoin.py
 
+from indented_logger import setup_logging
+import logging
+setup_logging(level=logging.INFO, include_func=False, include_module=False)
+logger = logging.getLogger(__name__)
+
+
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from typing import Optional, Dict, List
 import logging
@@ -9,9 +15,6 @@ import time
 # Import the Account class
 from .account import Account
 
-# Configure logging
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 
 class Pepecoin:
