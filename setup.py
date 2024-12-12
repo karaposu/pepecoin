@@ -6,7 +6,7 @@ import os
 
 setup(
     name='pepecoin',  # Package name
-    version='0.0.10',  # Version of your package
+    version='0.0.11',  # Version of your package
     author='PEPE',  # Your name
     include_package_data=True,
     packages=find_packages(),  # Automatically find packages in the directory
@@ -27,8 +27,8 @@ setup(
     entry_points={
         'console_scripts': [
             'pepecoin-monitor=pepecoin.cli:monitor_node',
-            'pepecoin-setup=pepecoin.cli:run_setup_test',
-            'pepecoin-test=pepecoin.cli:setup_node',
+            'pepecoin-test=pepecoin.cli:run_setup_test',
+            'pepecoin-setup=pepecoin.cli:setup_node',
             'pepecoin-setup-macos=pepecoin.cli:setup_node_macos',  # Ensure this function exists
             'pepecoin-setup-vm=pepecoin.cli:setup_vm',  # Ensure this function exists
             'pepecoin-install-service=pepecoin.cli:install_service',  # Ensure this function exists
