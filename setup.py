@@ -6,7 +6,7 @@ import os
 
 setup(
     name='pepecoin',  # Package name
-    version='0.0.8',  # Version of your package
+    version='0.0.9',  # Version of your package
     author='PEPE',  # Your name
     include_package_data=True,
     packages=find_packages(),  # Automatically find packages in the directory
@@ -23,10 +23,11 @@ setup(
     description='PEPECOIN class to interact with pepecoin blockchain in a easy way',  # Short description
     long_description=open('README.md').read(),  # Long description from a README file
     long_description_content_type='text/markdown',  # Type of the long description
-
+    
     entry_points={
         'console_scripts': [
             'pepecoin-monitor=pepecoin.cli:monitor_node',
+            'pepecoin-setup=pepecoin.cli:run_setup_test',
             'pepecoin-setup=pepecoin.cli:setup_node',
             'pepecoin-setup-macos=pepecoin.cli:setup_node_macos',  # Ensure this function exists
             'pepecoin-setup-vm=pepecoin.cli:setup_vm',  # Ensure this function exists
