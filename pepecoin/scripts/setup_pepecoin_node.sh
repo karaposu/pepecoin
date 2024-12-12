@@ -3,7 +3,7 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
-# Variables
+
 PEPECOIN_VERSION="1.0.1"  # Latest version
 
 # Detect system architecture
@@ -17,12 +17,35 @@ else
     exit 1
 fi
 
-PEPECOIN_URL="https://github.com/pepecoinppc/pepecoin/releases/download/v${PEPECOIN_VERSION}/${PEPECOIN_FILE}"
+
 INSTALL_DIR="$HOME/pepecoin"
 DATA_DIR="$HOME/.pepecoin"
 RPC_PORT=33873  # Default RPC port for Pepecoin
+PEPECOIN_CLI="$INSTALL_DIR/bin/pepecoin-cli"
+PEPECOIN_DAEMON="$INSTALL_DIR/bin/pepecoind"
+PEPECOIN_URL="https://github.com/pepecoinppc/pepecoin/releases/download/v${PEPECOIN_VERSION}/${PEPECOIN_FILE}"
 
 echo "Starting Pepecoin node setup..."
+
+# Check if pepecoin is already running
+if [ -x "$PEPECOIN_CLI" ]; then
+    if $PEPECOIN_CLI getblockchaininfo > /dev/null 2>&1; then
+        echo "Pepecoin Core is already running."
+        read -p "Pepecoin Core must be stopped before continuing. Stop now? (yes/no): " STOP_NOW
+        if [ "$STOP_NOW" == "yes" ]; then
+            echo "Stopping Pepecoin Core..."
+            $PEPECOIN_CLI stop
+            /bin/sleep 5
+            if $PEPECOIN_CLI getblockchaininfo > /dev/null 2>&1; then
+                echo "Pepecoin Core is still running. Please stop it manually and rerun the setup."
+                exit 1
+            fi
+        else
+            echo "Cannot continue while Pepecoin Core is running. Exiting."
+            exit 1
+        fi
+    fi
+fi
 
 # Prompt user for RPC credentials
 read -p "Enter a username for RPC authentication: " RPC_USER
@@ -94,8 +117,7 @@ EOF
 echo "Configuration file created at $DATA_DIR/pepecoin.conf"
 
 # Add Pepecoin binaries to PATH (optional)
-echo "Adding Pepecoin binaries to PATH..."
-export PATH="$INSTALL_DIR/bin:\$PATH"
+export PATH="$INSTALL_DIR/bin:$PATH"
 if [ -n "$BASH_VERSION" ]; then
     SHELL_RC="$HOME/.bashrc"
 elif [ -n "$ZSH_VERSION" ]; then
@@ -103,21 +125,42 @@ elif [ -n "$ZSH_VERSION" ]; then
 else
     SHELL_RC="$HOME/.profile"
 fi
-echo 'export PATH="'$INSTALL_DIR'/bin:$PATH"' >> "$SHELL_RC"
+echo "export PATH=\"$INSTALL_DIR/bin:\$PATH\"" >> "$SHELL_RC"
 
-# Start Pepecoin daemon
 echo "Starting Pepecoin daemon..."
-"$INSTALL_DIR/bin/pepecoind" -daemon
+"$PEPECOIN_DAEMON" -daemon
+echo "Pepecoin server starting"
 
-# Wait a few seconds to ensure the daemon starts
-sleep 5
+# Wait for the daemon to fully start. Check repeatedly if it's ready.
+ATTEMPTS=0
+MAX_ATTEMPTS=12
+while true; do
+    /bin/sleep 5
+    if OUTPUT=$("$PEPECOIN_CLI" getblockchaininfo 2>&1); then
+        echo "Pepecoin daemon started successfully."
+        break
+    else
+        # Check for "error code: -28" (Loading block index...)
+        if echo "$OUTPUT" | grep -q 'error code: -28'; then
+            echo "Pepecoin is still loading block index. Retrying..."
+            ATTEMPTS=$((ATTEMPTS+1))
+            if [ $ATTEMPTS -ge $MAX_ATTEMPTS ]; then
+                echo "Daemon did not become ready within the allotted time."
+                echo "Last output was:"
+                echo "$OUTPUT"
+                exit 1
+            fi
+        else
+            echo "Failed to start Pepecoin daemon."
+            echo "Output was:"
+            echo "$OUTPUT"
+            exit 1
+        fi
+    fi
+done
 
-# Check if the daemon is running
-if "$INSTALL_DIR/bin/pepecoin-cli" getblockchaininfo > /dev/null 2>&1; then
-    echo "Pepecoin daemon started successfully."
-else
-    echo "Failed to start Pepecoin daemon."
-    exit 1
-fi
 
 echo "Pepecoin node setup completed successfully."
+
+echo "To test essential capabilities with the help of pepecoin package please run: "
+echo "run_setup_test"
