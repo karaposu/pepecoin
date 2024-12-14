@@ -9,7 +9,7 @@ class PepecoinRPC:
         self.host = host
         self.port = port
         self.rpc_connection = self.connect_to_node()
-
+    
     def connect_to_node(self):
         rpc_url = f"http://{self.rpc_user}:{self.rpc_password}@{self.host}:{self.port}"
         return AuthServiceProxy(rpc_url)

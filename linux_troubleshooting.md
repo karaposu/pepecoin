@@ -38,6 +38,11 @@ If there is a result then we should can add it to path via (dont forget to repla
 ``` export PATH="/path/to/pepecoin-cli:$PATH" ```
 
 
+export PATH="/home/enesesvetkuzucu/pepecoin/bin/pepecoin-cli:$PATH"
+
+
+
+
 **If you receive an error:**
 
 - **Error Message:**

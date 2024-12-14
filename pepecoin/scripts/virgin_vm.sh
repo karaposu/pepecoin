@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#!/usr/bin/env bash
+#!/bin/bash -i
+
 sudo apt-get update
 sudo apt-get --assume-yes upgrade
 sudo apt-get --assume-yes install software-properties-common
@@ -14,3 +17,4 @@ chmod +x Miniconda3-py311_24.9.2-0-Linux-x86_64.sh
 source .bashrc
 . .bashrc
 . $HOME/.bashrc
+exec bash
