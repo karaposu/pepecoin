@@ -163,4 +163,4 @@ done
 echo "Pepecoin node setup completed successfully."
 
 echo "To test essential capabilities with the help of pepecoin package please run: "
-echo "run_setup_test"
+echo "pepecoin-test"
