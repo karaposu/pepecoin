@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 import sys
 import time
 from pepecoin import Pepecoin
-from utils import get_all_addresses
+from pepecoin.utils import get_all_addresses
 
 
 
