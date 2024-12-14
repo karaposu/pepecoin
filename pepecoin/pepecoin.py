@@ -143,7 +143,7 @@ class Pepecoin:
                     print("============================\n")
                 except JSONRPCException as e:
                     logger.error(f"Error during node monitoring: {e}")
-
+            
                 time.sleep(interval)
 
         # Run the monitor in a separate thread to avoid blocking
