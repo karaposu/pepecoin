@@ -41,7 +41,50 @@ def main():
 
     
     # # Define source and destination accounts
-    # source_account_name = 'source_account'
+    source_account_name = 'source_account'
+    source_account = pepecoin_node.get_account(source_account_name)
+    source_addresses = source_account.list_addresses()
+    if source_addresses:
+        selected_source= source_addresses[0]
+
+    destination_account_name = 'destination_account'
+    destination_account = pepecoin_node.get_account(destination_account_name)
+    destination_addresses = destination_account.list_addresses()
+    if destination_addresses:
+        selected_destination= destination_addresses[0]
+     
+    logger.info(f"selected_source {selected_source}")
+    logger.info(f"selected_destination {selected_destination}")
+
+    
+    balance =pepecoin_node.get_balance_of_address(selected_source)
+    if balance <= 0.1:
+        logger.error(f"To test Pepecoin transfer functionality, you must have funds in the '{source_account_name}' account, which you currently do not.")
+        logger.info(f"Send 1 pepecoin to : {selected_source}, And rerun this test script" )
+        logger.info(f"If you sent already, wait and rerun")
+        sys.exit(1)
+    else:
+        receiving_address= selected_destination
+        
+        amount_to_transfer=0.1
+         # Perform the transfer
+        logger.info(f"Initiating transfer of {amount_to_transfer} PEPE from account '{source_account_name}' to address '{receiving_address}'...")
+        tx_id = pepecoin_node.send_from(
+            from_account=source_account_name,
+            to_address=receiving_address,
+            amount=amount_to_transfer,
+            comment='Test transfer',
+            comment_to='Receiver'
+        )
+
+        if tx_id:
+            logger.info(f"Transfer successful. Transaction ID: {tx_id}")
+        else:
+            logger.error("Transfer failed.")
+
+
+
+
     # destination_account_name = 'destination_account'
 
     # #find the source account and get addresses 
