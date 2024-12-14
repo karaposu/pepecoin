@@ -1,4 +1,5 @@
-#!/usr/bin/env bash
+#!/bin/bash -i
+
 
 #!/bin/bash
 
@@ -16,7 +17,9 @@ chmod +x Miniconda3-py311_24.9.2-0-Linux-x86_64.sh
 ./Miniconda3-py311_24.9.2-0-Linux-x86_64.sh -b -p $HOME/miniconda3
 ~/miniconda3/bin/conda init bash
 
+
 source .bashrc
 . .bashrc
 . $HOME/.bashrc
 exec bash
+echo "done"
