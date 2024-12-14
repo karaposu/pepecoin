@@ -15,24 +15,37 @@ def get_all_addresses(pepecoin_node):
     """
     Retrieve all addresses known by the node and their total amount received.
     This includes addresses with zero balance, if any.
+    Mark the first address for easy access later.
     """
     try:
         # listreceivedbyaddress( minconf, include_empty ) 
         # minconf=0: include all transactions, even unconfirmed
         # include_empty=True: include addresses that haven't received any payments
         addresses_info = pepecoin_node.rpc_connection.listreceivedbyaddress(0, True)
-
+        
 
         addresses_grouped = pepecoin_node.rpc_connection.listaddressgroupings()
         logger.info(f"listaddressgroupings result: {addresses_grouped}")
-
-
+        
+        
         all_addresses = {}
-        for info in addresses_info:
+        first_address = None
+        
+        for i, info in enumerate(addresses_info):
             address = info['address']
             amount = float(info['amount'])
             all_addresses[address] = amount
+            
             logger.info(f"Found previously generated address: {address} with amount: {amount} $PEP")
+            
+            # Mark the first address
+            if i == 0:
+                first_address = address
+        
+        # Save the first address in a special key
+        if first_address:
+            all_addresses["_first_address"] = first_address
+            logger.info(f"First address marked: {first_address}")
 
         return all_addresses
     except Exception as e:
@@ -48,6 +61,40 @@ def test_pepecoin_class():
         host="127.0.0.1",
         port=33873
     )
+
+    def bring_addresses_by_account(account_name) :
+       
+
+        try:
+            source_acc_addresses = pepecoin_node.rpc_connection.getaddressesbyaccount(account_name)
+            if account_name== "":
+                logger.info(f"getaddressesbyaccount('{account_name}' -no name-) returned: {source_acc_addresses}")
+            else:
+           
+                logger.info(f"getaddressesbyaccount('{account_name}') returned: {source_acc_addresses}")
+            return source_acc_addresses
+
+        except Exception as e:
+            logger.error(f"Error calling getaddressesbyaccount('{account_name}'): {e}")
+
+
+    def bring_account_from_address(address):
+        try:
+            addr_account = pepecoin_node.rpc_connection.getaccount(address)
+            logger.info(f"getaccount('{address}') returned: {addr_account}")
+            return addr_account
+        except Exception as e:
+            logger.error(f"Error calling getaccount('{address}'): {e}")
+
+    def bring_address_info(address):
+        try:
+            addr_info = pepecoin_node.rpc_connection.getaddressinfo(address)
+            logger.info(f"getaddressinfo('{address}') returned: {addr_info}")
+        except Exception as e:
+            logger.warning("getaddressinfo RPC might not be supported. Error: %s", e)  
+
+
+     
 
 
     # Test check_node_connection
@@ -106,47 +153,23 @@ def test_pepecoin_class():
 
     all_addresses = get_all_addresses(pepecoin_node)
 
+    first_address = all_addresses.get("_first_address")
 
-    # Check if there's any previously generated address with a non-zero amount.
-    # If you'd like, you could also check for addresses associated to source_account specifically.
+    previously_generated_source_address=None
+    if first_address:
+        previously_generated_source_address = first_address
+        previously_generated_source_address_amount = all_addresses.get(first_address)
+        logger.info(f"Found previously generated address: {first_address} with amount: {previously_generated_source_address_amount} $PEP (first assigned)")
+
     
-    for i, (adr, amount) in enumerate(all_addresses.items()):
-        if i == 0:
-            # Assign on the first address only
-            previously_generated_source_address = adr
-            previously_generated_source_address_amount = amount
-            logger.info(f"Found previously generated address: {adr} with amount: {amount} $PEP (first assigned)")
-        else:
-            # For subsequent addresses, just log without assigning
-            logger.info(f"Found previously generated address: {adr} with amount: {amount} $PEP")
-            
-        logger.info("Debugging address/account association...")
-    try:
-        source_acc_addresses = pepecoin_node.rpc_connection.getaddressesbyaccount(source_account)
-        logger.info(f"getaddressesbyaccount('{source_account}') returned: {source_acc_addresses}")
-    except Exception as e:
-        logger.error(f"Error calling getaddressesbyaccount('{source_account}'): {e}")
-
-    try:
-        dest_acc_addresses = pepecoin_node.rpc_connection.getaddressesbyaccount(destination_account)
-        logger.info(f"getaddressesbyaccount('{destination_account}') returned: {dest_acc_addresses}")
-    except Exception as e:
-        logger.error(f"Error calling getaddressesbyaccount('{destination_account}'): {e}")
-
+    no_name_acc_addresses= bring_addresses_by_account("")
+    source_acc_addresses=bring_addresses_by_account(source_account)
+    destination_acc_addresses= bring_addresses_by_account(destination_account)
+    
+    
     if 'previously_generated_source_address' in locals() and previously_generated_source_address is not None:
-        try:
-            addr_account = pepecoin_node.rpc_connection.getaccount(previously_generated_source_address)
-            logger.info(f"getaccount('{previously_generated_source_address}') returned: {addr_account}")
-        except Exception as e:
-            logger.error(f"Error calling getaccount('{previously_generated_source_address}'): {e}")
-
-        # Try getaddressinfo if supported
-        try:
-            addr_info = pepecoin_node.rpc_connection.getaddressinfo(previously_generated_source_address)
-            logger.info(f"getaddressinfo('{previously_generated_source_address}') returned: {addr_info}")
-        except Exception as e:
-            logger.warning("getaddressinfo RPC might not be supported. Error: %s", e)    
-    
+        addr_account=bring_account_from_address(previously_generated_source_address)
+        addr_info=bring_address_info(previously_generated_source_address)
     
     try:
         if not previously_generated_source_address:
