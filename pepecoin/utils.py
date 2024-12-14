@@ -56,10 +56,11 @@ def get_all_addresses(pepecoin_node):
         # minconf=0: include all transactions, even unconfirmed
         # include_empty=True: include addresses that haven't received any payments
         addresses_info = pepecoin_node.rpc_connection.listreceivedbyaddress(0, True)
+        logger.info(f"total existing addresses result: {len(addresses_info)}")
         
 
-        addresses_grouped = pepecoin_node.rpc_connection.listaddressgroupings()
-        logger.info(f"listaddressgroupings result: {addresses_grouped}")
+        # addresses_grouped = pepecoin_node.rpc_connection.listaddressgroupings()
+        # logger.info(f"listaddressgroupings result: {addresses_grouped}")
         
         
         all_addresses = {}
@@ -70,7 +71,7 @@ def get_all_addresses(pepecoin_node):
             amount = float(info['amount'])
             all_addresses[address] = amount
             
-            logger.info(f"Found previously generated address: {address} with amount: {amount} $PEP")
+            logger.info(f"   Address {i}: {address} , Balance: {amount} $PEP")
             
             # Mark the first address
             if i == 0:

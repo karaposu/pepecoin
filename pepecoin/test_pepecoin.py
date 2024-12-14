@@ -104,7 +104,7 @@ def test_pepecoin_class():
     
     logger.info(" ")
     logger.info("running  get_all_addresses  after new address generation")
-    get_all_addresses()
+    get_all_addresses(pepecoin_node)
 
     
     
