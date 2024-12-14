@@ -166,6 +166,19 @@ class Pepecoin:
         except JSONRPCException as e:
             logger.error(f"Failed to generate new address: {e}")
             return None
+        
+    def get_balance_of_address(self, address: str, minconf=1) -> float:
+        """
+        Get the current spendable balance for a specific address by summing its unspent outputs.
+        """
+        try:
+            unspents = self.rpc_connection.listunspent(minconf, 9999999, [address])
+            total = sum(u['amount'] for u in unspents)
+            logger.info(f"Balance for address '{address}' is {total} $PEP")
+            return total
+        except JSONRPCException as e:
+            logger.error(f"Failed to get balance for address '{address}': {e}")
+            return 0.0  # or None
 
     def get_balance(self, account=None):
         try:

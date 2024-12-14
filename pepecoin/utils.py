@@ -56,7 +56,7 @@ def get_all_addresses(pepecoin_node):
         # minconf=0: include all transactions, even unconfirmed
         # include_empty=True: include addresses that haven't received any payments
         addresses_info = pepecoin_node.rpc_connection.listreceivedbyaddress(0, True)
-        logger.info(f"total existing addresses result: {len(addresses_info)}")
+        logger.info(f"Total existing addresses result: {len(addresses_info)}")
         
 
         # addresses_grouped = pepecoin_node.rpc_connection.listaddressgroupings()
@@ -69,9 +69,20 @@ def get_all_addresses(pepecoin_node):
         for i, info in enumerate(addresses_info):
             address = info['address']
             amount = float(info['amount'])
+            
+            try:
+                account_name = pepecoin_node.rpc_connection.getaccount(address)
+            except Exception as e:
+                # If getaccount is not supported or fails, set None or a default
+                account_name = None
+                logger.warning(f"Error calling getaccount({address}): {e}")
+
+
+
+            
             all_addresses[address] = amount
             
-            logger.info(f"   Address {i}: {address} , Balance: {amount} $PEP")
+            logger.info(f"   Address {i}: {address} , Account {account_name} ,  Balance: {amount} $PEP")
             
             # Mark the first address
             if i == 0:
