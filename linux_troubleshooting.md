@@ -28,6 +28,16 @@ If the node is running and your RPC credentials are correct, you'll receive deta
 }
 ```
 
+#### **. if `pepecoin-cli` not found** 
+This means it is not added to the PATH.  First we should locate it via 
+
+```find / -name pepecoin-cli 2>/dev/null```
+
+If there is a result then we should can add it to path via (dont forget to replace the /path/to/pepecoin-cli part )
+
+``` export PATH="/path/to/pepecoin-cli:$PATH" ```
+
+
 **If you receive an error:**
 
 - **Error Message:**

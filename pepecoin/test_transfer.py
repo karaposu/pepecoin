@@ -71,7 +71,7 @@ def main():
     if balance < amount_to_transfer:
         logger.error(f"Source account '{source_account_name}' has insufficient balance to transfer {amount_to_transfer} PEPE.")
         sys.exit(1)
-
+    
     # Get the destination account
     destination_account = pepecoin_node.get_account(destination_account_name)
 

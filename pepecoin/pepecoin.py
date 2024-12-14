@@ -63,8 +63,37 @@ class Pepecoin:
         except JSONRPCException as e:
             logger.error(f"Node connection failed: {e}")
             return False
-
+        
     def is_sync_needed(self):
+        try:
+            """Check if the node is synchronized with the network using internal information."""
+            blockchain_info = self.rpc_connection.getblockchaininfo()
+            is_initial_download = blockchain_info.get('initialblockdownload', True)
+            verification_progress = blockchain_info.get('verificationprogress', 0)
+            blocks = blockchain_info.get('blocks', 0)
+            headers = blockchain_info.get('headers', 0)
+            
+            # Calculate a rough sync percentage
+            # If headers == 0, just default to verification_progress * 100
+            if headers > 0:
+                sync_percentage = (blocks / headers) * 100
+            else:
+                sync_percentage = verification_progress * 100
+
+            if not is_initial_download and verification_progress >= 0.9999:
+                logger.info("Node is fully synchronized with the network.")
+                return False  # Sync is not needed
+            else:
+                logger.warning("Node is still syncing.")
+                logger.warning(f"Verification Progress: {verification_progress * 100:.2f}%")
+                logger.warning(f"Estimated Sync Percentage (blocks/headers): {sync_percentage:.2f}%")
+                return True  # Sync is needed
+        except Exception as e:
+            logger.error(f"Error checking synchronization status: {e}")
+            return True  # Assume sync is needed if there's an error
+
+
+    def is_sync_needed_old(self):
         """Check if the node is synchronized with the network using internal information."""
         try:
             blockchain_info = self.rpc_connection.getblockchaininfo()
@@ -126,7 +155,7 @@ class Pepecoin:
         if self.is_sync_needed():
             logger.error("Node is not synchronized. Cannot generate a new address.")
             raise Exception("Node is not synchronized with the network.")
-
+        
         try:
             if account:
                 address = self.rpc_connection.getnewaddress(account)
@@ -142,10 +171,10 @@ class Pepecoin:
         try:
             if account:
                 balance = self.rpc_connection.getbalance(account)
-                logger.info(f"Balance for account '{account}': {balance} PEPE")
+                logger.info(f"Balance for account '{account}': {balance} $PEP")
             else:
                 balance = self.rpc_connection.getbalance()
-                logger.info(f"Total wallet balance: {balance} PEPE")
+                logger.info(f"Total wallet balance: {balance} $PEP")
             return balance
         except JSONRPCException as e:
             logger.error(f"Failed to get balance: {e}")
@@ -159,7 +188,7 @@ class Pepecoin:
 
         try:
             tx_id = self.rpc_connection.sendfrom(from_account, to_address, amount, minconf, comment, comment_to)
-            logger.info(f"Sent {amount} PEPE from '{from_account}' to '{to_address}'. Transaction ID: {tx_id}")
+            logger.info(f"Sent {amount} $PEP from '{from_account}' to '{to_address}'. Transaction ID: {tx_id}")
             return tx_id
         except JSONRPCException as e:
             logger.error(f"Failed to send from '{from_account}': {e}")
@@ -169,7 +198,7 @@ class Pepecoin:
         try:
             result = self.rpc_connection.move(from_account, to_account, amount, minconf, comment)
             if result:
-                logger.info(f"Moved {amount} PEPE from '{from_account}' to '{to_account}'.")
+                logger.info(f"Moved {amount} $PEP from '{from_account}' to '{to_account}'.")
             else:
                 logger.warning(f"Move operation returned False.")
             return result
@@ -398,7 +427,7 @@ class Pepecoin:
                 amount=amount,
                 comment=comment
             )
-            logger.info(f"Transferred {amount} PEPE from account '{from_account_name}' to account '{to_account_name}'. TXID: {tx_id}")
+            logger.info(f"Transferred {amount} $PEP from account '{from_account_name}' to account '{to_account_name}'. TXID: {tx_id}")
             return tx_id
         except JSONRPCException as e:
             logger.error(f"Error transferring funds between accounts: {e}")
@@ -430,7 +459,7 @@ class Pepecoin:
                     amount=amount
                 )
                 tx_ids.append(tx_id)
-                logger.info(f"Transferred {amount} PEPE from account '{account_name}' to '{to_address}'. TXID: {tx_id}")
+                logger.info(f"Transferred {amount} $PEP from account '{account_name}' to '{to_address}'. TXID: {tx_id}")
 
             return tx_ids
         except JSONRPCException as e:
@@ -464,7 +493,7 @@ class Pepecoin:
                         amount=balance
                     )
                     tx_ids.append(tx_id)
-                    logger.info(f"Consolidated {balance} PEPE from account '{account_name}' to '{destination_account_name}'. TXID: {tx_id}")
+                    logger.info(f"Consolidated {balance} $PEP from account '{account_name}' to '{destination_account_name}'. TXID: {tx_id}")
                 else:
                     logger.info(f"No balance to transfer from account '{account_name}'.")
 
