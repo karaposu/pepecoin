@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-from utils import bring_addresses_by_account, get_all_addresses , bring_account_from_address, bring_address_info
+from pepecoin.utils import bring_addresses_by_account, get_all_addresses , bring_account_from_address, bring_address_info
 
 
 
