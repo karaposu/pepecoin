@@ -21,11 +21,19 @@ def get_all_addresses(pepecoin_node):
         # minconf=0: include all transactions, even unconfirmed
         # include_empty=True: include addresses that haven't received any payments
         addresses_info = pepecoin_node.rpc_connection.listreceivedbyaddress(0, True)
+
+
+        addresses_grouped = pepecoin_node.rpc_connection.listaddressgroupings()
+        logger.info(f"listaddressgroupings result: {addresses_grouped}")
+
+
         all_addresses = {}
         for info in addresses_info:
             address = info['address']
             amount = float(info['amount'])
             all_addresses[address] = amount
+            logger.info(f"Found previously generated address: {address} with amount: {amount} $PEP")
+
         return all_addresses
     except Exception as e:
         logger.error(f"Failed to retrieve addresses: {e}")
@@ -112,8 +120,33 @@ def test_pepecoin_class():
             # For subsequent addresses, just log without assigning
             logger.info(f"Found previously generated address: {adr} with amount: {amount} $PEP")
             
-        
+        logger.info("Debugging address/account association...")
+    try:
+        source_acc_addresses = pepecoin_node.rpc_connection.getaddressesbyaccount(source_account)
+        logger.info(f"getaddressesbyaccount('{source_account}') returned: {source_acc_addresses}")
+    except Exception as e:
+        logger.error(f"Error calling getaddressesbyaccount('{source_account}'): {e}")
 
+    try:
+        dest_acc_addresses = pepecoin_node.rpc_connection.getaddressesbyaccount(destination_account)
+        logger.info(f"getaddressesbyaccount('{destination_account}') returned: {dest_acc_addresses}")
+    except Exception as e:
+        logger.error(f"Error calling getaddressesbyaccount('{destination_account}'): {e}")
+
+    if 'previously_generated_source_address' in locals() and previously_generated_source_address is not None:
+        try:
+            addr_account = pepecoin_node.rpc_connection.getaccount(previously_generated_source_address)
+            logger.info(f"getaccount('{previously_generated_source_address}') returned: {addr_account}")
+        except Exception as e:
+            logger.error(f"Error calling getaccount('{previously_generated_source_address}'): {e}")
+
+        # Try getaddressinfo if supported
+        try:
+            addr_info = pepecoin_node.rpc_connection.getaddressinfo(previously_generated_source_address)
+            logger.info(f"getaddressinfo('{previously_generated_source_address}') returned: {addr_info}")
+        except Exception as e:
+            logger.warning("getaddressinfo RPC might not be supported. Error: %s", e)    
+    
     
     try:
         if not previously_generated_source_address:
@@ -136,7 +169,7 @@ def test_pepecoin_class():
                 logger.error("If you have already sent the funds, they have not been received yet. Please rerun the script after five minutes ")
                 sys.exit(1)
           
- 
+        
         logger.info("Generating new address for destination account...")
         destination_address = pepecoin_node.generate_new_address(account=destination_account)
         logger.info(f"New Address for '{destination_account}': {destination_address}\n")
@@ -193,7 +226,7 @@ def test_pepecoin_class():
     # Wait for the transaction to be registered
     logger.info("Waiting for the transaction to be registered...")
     time.sleep(10)  # Increase sleep time if necessary
-
+    
     # Check the balances again
     logger.info("Getting balances after transfer...")
     source_balance = pepecoin_node.get_balance(account=source_account)

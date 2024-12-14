@@ -57,12 +57,18 @@ while true; do
     read -s -p "Confirm the password: " RPC_PASSWORD_CONFIRM
     echo
     if [ "$RPC_PASSWORD" == "$RPC_PASSWORD_CONFIRM" ]; then
-        echo "Passwords match."
+        echo "Passwords match. Proceding..."
         break
     else
         echo "Passwords do not match. Please try again."
     fi
 done
+
+
+export RPC_USER="$RPC_USER"
+export RPC_PASSWORD="$RPC_PASSWORD"
+echo "RPC_USER and RPC_PASSWORD have been set to env for this session only."
+echo "This is done so you can run the test script with same configuration."
 
 # Create install directory
 mkdir -p "$INSTALL_DIR"
@@ -161,6 +167,20 @@ done
 
 
 echo "Pepecoin node setup completed successfully."
+
+
+# Find pepecoin-cli path and add it to PATH if found
+PEPECOIN_CLI_PATH=$(find / -type f -name pepecoin-cli 2>/dev/null | head -n 1)
+if [ -n "$PEPECOIN_CLI_PATH" ]; then
+    PEPECOIN_DIR=$(dirname "$PEPECOIN_CLI_PATH")
+    # Add to PATH for current session
+    export PATH="$PEPECOIN_DIR:$PATH"
+    # Add to shell RC file for future sessions
+    echo "export PATH=\"$PEPECOIN_DIR:\$PATH\"" >> "$SHELL_RC"
+    echo "Found pepecoin-cli at $PEPECOIN_CLI_PATH and added it to PATH."
+else
+    echo "pepecoin-cli not found by global search. It's likely in $INSTALL_DIR/bin already."
+fi
 
 echo "To test essential capabilities with the help of pepecoin package please run: "
 echo "pepecoin-test"
