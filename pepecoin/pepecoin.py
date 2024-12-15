@@ -1,4 +1,4 @@
-# pepecoin.py
+# pepecoin/pepecoin.py
 
 from indented_logger import setup_logging
 import logging

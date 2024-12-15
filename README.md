@@ -146,10 +146,7 @@ Run `pepecoin-cli getblockchaininfo`  and if you dont see a json output go to in
   - Transaction Tracking: Transactions can be attributed to specific accounts.
   - All accounts share the same underlying wallet file. There is no way to encrypt accounts individually via RPC. Wallet-level encryption affects all accounts.
 
-
-
-
-
+5. "accounts" are essentially labels for your addresses that share a single wallet.dat. So the act of creating a new account is conceptually just getting an Account instance tied to a name (label). If the account doesn't exist yet, Pepecoin implicitly creates it for you when you first reference it.
 
 
 
@@ -183,271 +180,122 @@ else:
     print("Node is not connected.")
 ```
 
-### Create a New Wallet
+### Create a New Account 
+```
+from pepecoin import Pepecoin
 
-```
-wallet_created = pepecoin.create_new_wallet(
-    wallet_name="merchant_wallet",
-    passphrase="secure_passphrase"
+# Initialize the Pepecoin client
+pepecoin = Pepecoin(
+    rpc_user="pepe_user",
+    rpc_password="pepe_pass",
+    host="127.0.0.1",
+    port=29373
 )
-if wallet_created:
-    print("Wallet created successfully.")
-else:
-    print("Failed to create wallet.")
+
+# Creating (or retrieving) an account named "my_new_account"
+my_new_account = pepecoin.get_account("my_new_account")
+
+# Optionally, generate an address for that account to begin using it
+new_address = my_new_account.generate_address()
+print(f"New Address for 'my_new_account': {new_address}")
 ```
+
+Note: This won't create a standalone wallet file. Instead, it creates or references a label inside the single Pepecoin wallet.
+
 
 ### Generate a New Address
 
-```
-payment_address = pepecoin.generate_new_address(label="order_12345")
-print(f"Payment Address: {payment_address}")
-```
-
-### Check Wallet Balance
+You can generate a new address for a specific account. Each address is part of the single wallet but is logically grouped under your chosen "account" label.
 
 ```
-balance = pepecoin.check_balance()
-print(f"Wallet Balance: {balance} PEPE")
+# If you already have an Account instance
+my_account = pepecoin.get_account("my_new_account")
+
+# Generate a new address within this account
+new_address = my_account.generate_address()
+print(f"New Address: {new_address}")
+
+# Or generate a new address without specifying an account (defaults to your main wallet account)
+default_address = pepecoin.generate_new_address()
+print(f"New Default Account Address: {default_address}")
 ```
+
+
+### Check Account Balance
+
+
+
+```
+# Get an Account instance
+my_account = pepecoin.get_account("my_new_account")
+
+# Retrieve the balance
+balance = my_account.get_balance()
+print(f"Balance for 'my_new_account': {balance} PEPE")
+
+# Or directly from the Pepecoin instance (if you prefer an older naming convention)
+account_balance = pepecoin.get_balance(account="my_new_account")
+print(f"Balance for 'my_new_account': {account_balance} PEPE")
+```
+
+
+
+### Check Address Balance
+
+To confirm if you've received a specific payment (for instance, 1.0 PEPE with at least 1 confirmation) at a given address:
+
+
+```
+# Suppose you have an address
+address = "PcLbnQ6w3rxQPU..."
+address_balance = pepecoin.get_balance_of_address(address)
+print(f"Balance for address {address}: {address_balance} PEPE")
+```
+
 
 ### Check for Payments
 
 ```
-payment_received = pepecoin.check_payment(
-    address=payment_address,
-    expected_amount=10.0
-)
+# Let's say you previously generated an address for your merchant account
+my_account = pepecoin.get_account("merchant_account")
+watch_address = my_account.generate_address()
+
+# Wait for incoming payment, then check
+expected_amount = 1.0  # PEPE
+payment_received = my_account.check_payment(watch_address, expected_amount, min_confirmations=1)
+
 if payment_received:
-    print("Payment received.")
+    print("Payment has arrived!")
 else:
-    print("Payment not yet received.")
+    print("No payment yet, or not enough confirmations.")
 ```
 
-### Lock and Unlock Wallet
+For robust payment checking, you might poll this method in your code (e.g., a cron job or a background task) until payment_received is True.
+
+### Lock and Unlock Account
+Wallet encryption in older Pepecoin (Bitcoin-Core-like) systems is at the wallet level, not the account level. So locking or unlocking applies to the entire wallet (all accounts).
 
 ```
-# Unlock the wallet
-pepecoin.unlock_wallet(
-    wallet_name="merchant_wallet",
-    passphrase="secure_passphrase",
-    timeout=60  # Unlock for 60 seconds
-)
+# Unlock the wallet for 60 seconds
+try:
+    pepecoin.rpc_connection.walletpassphrase("my_w0rldClass#Passphrase", 60)
+    print("Wallet unlocked successfully!")
+except Exception as e:
+    print(f"Error unlocking wallet: {e}")
 
-# Lock the wallet
-pepecoin.lock_wallet(wallet_name="merchant_wallet")
+# ... do your sending operations, e.g. send_from, move, etc. ...
+
+# Lock the wallet again
+try:
+    pepecoin.rpc_connection.walletlock()
+    print("Wallet locked successfully!")
+except Exception as e:
+    print(f"Error locking wallet: {e}")
 ```
 
-### Mass Transfer Funds
 
-```
-from_wallets = ["wallet1", "wallet2"]
-passphrases = ["passphrase1", "passphrase2"]
-to_address = "PMainWalletAddress1234567890"
 
-tx_ids = pepecoin.mass_transfer(
-    from_wallets=from_wallets,
-    to_address=to_address,
-    passphrases=passphrases
-)
-print(f"Mass transfer transaction IDs: {tx_ids}")
-```
 
----
-
-
-
-# Future Improvements 
-
-- Synchronous vs. Asynchronous: The AuthServiceProxy class is synchronous. If we need asynchronous support, we might need to use an asynchronous RPC client or run synchronous code in a thread pool.
-
-
-
-
-
-
-
-
-
-
-
-
----
-
-## API Reference
-
-### `__init__`
-
-Initialize the Pepecoin RPC connection.
-
-```
-def __init__(
-    self,
-    rpc_user: str,
-    rpc_password: str,
-    host: str = '127.0.0.1',
-    port: int = 29373,
-    wallet_name: Optional[str] = None
-) -> None:
-```
-
-- **Parameters**:
-  - `rpc_user`: RPC username.
-  - `rpc_password`: RPC password.
-  - `host`: Host where the Pepecoin node is running.
-  - `port`: RPC port of the Pepecoin node.
-  - `wallet_name`: Name of the wallet to interact with (optional).
-
-### `init_rpc`
-
-Initialize the RPC connection to the Pepecoin node.
-
-```
-def init_rpc(self) -> AuthServiceProxy:
-```
-
-- **Returns**: `AuthServiceProxy` object.
-
-### `check_node_connection`
-
-Check if the node is connected and reachable.
-
-```
-def check_node_connection(self) -> bool:
-```
-
-- **Returns**: `True` if connected, `False` otherwise.
-
-### `create_new_wallet`
-
-Create a new wallet.
-
-```
-def create_new_wallet(
-    self,
-    wallet_name: str,
-    passphrase: str = None,
-    disable_private_keys: bool = False
-) -> bool:
-```
-
-- **Parameters**:
-  - `wallet_name`: Name of the new wallet.
-  - `passphrase`: Passphrase to encrypt the wallet (optional).
-  - `disable_private_keys`: If `True`, the wallet will not contain private keys.
-- **Returns**: `True` if wallet was created successfully, `False` otherwise.
-
-### `get_wallet_rpc`
-
-Get an RPC connection for a specific wallet.
-
-```
-def get_wallet_rpc(self, wallet_name: str) -> AuthServiceProxy:
-```
-
-- **Parameters**:
-  - `wallet_name`: Name of the wallet.
-- **Returns**: `AuthServiceProxy` object connected to the wallet.
-
-### `lock_wallet`
-
-Lock the specified wallet.
-
-```
-def lock_wallet(self, wallet_name: Optional[str] = None) -> None:
-```
-
-- **Parameters**:
-  - `wallet_name`: Name of the wallet to lock. If `None`, uses the default wallet.
-
-### `unlock_wallet`
-
-Unlock the specified wallet.
-
-```
-def unlock_wallet(
-    self,
-    wallet_name: Optional[str],
-    passphrase: str,
-    timeout: int = 60
-) -> None:
-```
-
-- **Parameters**:
-  - `wallet_name`: Name of the wallet to unlock.
-  - `passphrase`: Passphrase of the wallet.
-  - `timeout`: Time in seconds for which the wallet remains unlocked.
-
-### `generate_new_address`
-
-Generate a new Pepecoin address.
-
-```
-def generate_new_address(self, label: str = None) -> str:
-```
-
-- **Parameters**:
-  - `label`: Label to associate with the new address (optional).
-- **Returns**: The new Pepecoin address.
-
-### `check_balance`
-
-Check the balance of the specified wallet.
-
-```
-def check_balance(self, wallet_name: Optional[str] = None) -> float:
-```
-
-- **Parameters**:
-  - `wallet_name`: Name of the wallet to check balance for. If `None`, uses the default wallet.
-- **Returns**: The balance of the wallet.
-
-### `check_payment`
-
-Check if the expected amount has been received at the specified address.
-
-```
-def check_payment(
-    self,
-    address: str,
-    expected_amount: float,
-    min_confirmations: int = 1
-) -> bool:
-```
-
-- **Parameters**:
-  - `address`: The Pepecoin address to check.
-  - `expected_amount`: The expected amount to be received.
-  - `min_confirmations`: Minimum number of confirmations required.
-- **Returns**: `True` if the expected amount has been received, `False` otherwise.
-
-### `mass_transfer`
-
-Transfer funds from multiple wallets to a target address.
-
-```
-def mass_transfer(
-    self,
-    from_wallets: List[str],
-    to_address: str,
-    passphrases: Optional[List[str]] = None
-) -> List[str]:
-```
-
-- **Parameters**:
-  - `from_wallets`: List of wallet names to transfer from.
-  - `to_address`: The target Pepecoin address to transfer funds to.
-  - `passphrases`: List of passphrases for the wallets (if encrypted).
-- **Returns**: List of transaction IDs.
-
----
-
-## Security Considerations
-
-- **Passphrases**: Never hardcode passphrases in your code. Use secure methods to store and retrieve them (e.g., environment variables, secure key management systems).
-- **RPC Credentials**: Protect your RPC credentials. Do not expose them in logs or version control.
-- **Wallet Encryption**: Always encrypt wallets that hold real funds.
-- **Node Security**: Ensure your Pepecoin node is secure, with proper firewall settings and access controls.
-- **SSL/TLS Encryption**: Consider using SSL/TLS for RPC communications.
 
 ---
 
@@ -468,9 +316,6 @@ Contributions are welcome! Please open an issue or submit a pull request on GitH
 - [python-bitcoinrpc](https://github.com/jgarzik/python-bitcoinrpc) for providing the RPC client library.
 
 ---
-
-
-pepecoin-cli getblockchaininfo
 
 
 **Note**: This client library is provided as-is. Use it at your own risk. Ensure that you understand the security implications of interacting with cryptocurrency nodes and wallets.

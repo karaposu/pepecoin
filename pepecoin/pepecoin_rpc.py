@@ -1,4 +1,4 @@
-# pepecoin_rpc.py
+# pepecoin/pepecoin_rpc.py
 
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 
