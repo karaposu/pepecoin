@@ -22,12 +22,13 @@ The `Pepecoin` class provides a simplified interface for wallet management, addr
 ## Features
 
 - **Simplified RPC Connection**: Easily connect to a Pepecoin node using RPC.
-- **Wallet Management**: Create, encrypt, lock, and unlock wallets.
+- **Account Management**: Create and manage multiple "accounts" within the single wallet (a legacy feature of the Pepecoin node). Accounts allow you to logically organize funds under different labels.
 - **Address Generation**: Generate new Pepecoin addresses with optional labels.
-- **Balance Checking**: Check the balance of wallets.
-- **Payment Verification**: Verify if payments have been received at specific addresses.
-- **Mass Transfer**: Transfer funds from multiple wallets to a single address.
-- **Node Connection Checking**: Verify if the Pepecoin node is connected and reachable.
+- **Balance Checking**: Check the balance of accounts.
+- **Payment Verification**: Verify that a certain amount of PEP was received at a specific address
+- **Mass Transfer**: Transfer funds from multiple accounts to a single address for consolidation or payouts.
+- **Node Connection Checking**: Quickly verify that the Pepecoin node is up and reachable via RPC.
+-  **Wallet Locking/Unlocking**: Encrypt the single wallet (where all accounts live). Lock and unlock the wallet for a specified duration to allow outgoing transactions.
 
 ---
 
