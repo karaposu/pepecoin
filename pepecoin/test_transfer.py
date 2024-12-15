@@ -9,14 +9,15 @@ import sys
 import time
 from pepecoin import Pepecoin
 from pepecoin.utils import get_all_addresses
+import os
 
 
 
 def main():
     # Initialize Pepecoin node connection
     pepecoin_node = Pepecoin(
-        rpc_user='karaposu',
-        rpc_password='sanane',
+        rpc_user=     os.environ.get("RPC_USER", "test"),
+        rpc_password= os.environ.get("RPC_PASSWORD", "test"),
         host='127.0.0.1',
         port=33873
     )
@@ -68,7 +69,7 @@ def main():
         
         amount_to_transfer=0.1
          # Perform the transfer
-        logger.info(f"Initiating transfer of {amount_to_transfer} PEPE from account '{source_account_name}' to address '{receiving_address}'...")
+        logger.info(f"Initiating transfer of {amount_to_transfer} PEP from account '{source_account_name}' to address '{receiving_address}'...")
         tx_id = pepecoin_node.send_from(
             from_account=source_account_name,
             to_address=receiving_address,
@@ -80,10 +81,11 @@ def main():
         if tx_id:
             logger.info(f"Transfer successful. Transaction ID: {tx_id}")
             logger.info(f"Please run below command to check balance of destination address. (Repeat unless no balance found)")
-            logger.info(f" pepecoin-cli getreceivedbyaddress '{receiving_address}' ")
+            logger.info(f"        pepecoin-cli getreceivedbyaddress '{receiving_address}' ")
             
-            logger.info(f" to confirm 0.1 pepecoin is gone source account, run:  ")
-            logger.info(f" pepecoin-cli getbalance source_account ")
+            logger.info(f"To confirm 0.1 pepecoin is gone from source account, run:  ")
+            logger.info(f"        pepecoin-cli getbalance source_account ")
+            
 
             
             

@@ -47,6 +47,9 @@ if [ -x "$PEPECOIN_CLI" ]; then
     fi
 fi
 
+
+ echo "The RPC (Remote Procedure Call) password simply controls access to your node’s interface. It’s not your wallet encryption password."
+
 # Prompt user for RPC credentials
 read -p "Enter a username for RPC authentication: " RPC_USER
 
