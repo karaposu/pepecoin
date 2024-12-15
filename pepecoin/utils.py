@@ -77,21 +77,11 @@ def get_all_addresses(pepecoin_node):
                 account_name = None
                 logger.warning(f"Error calling getaccount({address}): {e}")
 
-
-
-            
             all_addresses[address] = amount
             
             logger.info(f"   Address {i}: {address} , Account {account_name} ,  Balance: {amount} $PEP")
             
-            # Mark the first address
-            if i == 0:
-                first_address = address
-        
-        # Save the first address in a special key
-        if first_address:
-            all_addresses["_first_address"] = first_address
-            logger.info(f"First address marked: {first_address}")
+            
 
         return all_addresses
     except Exception as e:
