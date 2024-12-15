@@ -45,49 +45,110 @@ pip install pepecoin
 
 ---
 
-## Getting Started
+## Step by Step Setup Guide
 
-### Prerequisites
+###  0.Install Python 3.11 [Optional, Linux Only]
 
-- **Automatic Setup**: If you haven't gone through the official pepecoin node setup process, you can run the following command  (comes bundled with "pip install pepecoin" ) to start the installation automatically:
+- **Linux**: copy and run below command
+``` 
+curl -fsSL https://raw.githubusercontent.com/karaposu/pepecoin/refs/heads/main/pepecoin/scripts/virgin_vm.sh | bash
 
+```
+
+###  0.Prerequisites for Mac Users 
+
+- **MacOS**: MacOS version must be at least 15
+- **Xcode**: Download Xcode and Xcode command line tools
+``` 
+curl -fsSL https://raw.githubusercontent.com/karaposu/pepecoin/refs/heads/main/pepecoin/scripts/virgin_vm.sh | bash
+
+```
+
+###  1.Install pepecoin package
+
+``` 
+pip install pepecoin
+
+```
+
+###  2.Run the setup script
+
+This script will clone official pepecoin core and 
+1. Prompts you to create rpc_user and rpc_password 
+2. Download compiled binaries
+3. Create pepecoin.conf
+4. Add Pepecoin binaries to PATH
+5. Start Pepecoin daemon
+6. Verify the daemon is indeed running 
+
+(rpc_user and password can be found in ~/.pepecoin/pepecoin.conf) 
+
+Offical repo installation does not support pepecoin-cli for MacOS. So I patched it and made it work. But use it only for development. 
+
+- **For Linux**
   ```bash
   pepecoin-setup
-  
-  # for MacOS do:
-  # pepecoin-setup-macos
-  # beware that this will install many dependencies and build pepecoin binaries
   ```
 
-  This command will execute a bash script included in the Pepecoin package that follows the steps in the official [Pepecoin installation documentation](https://github.com/pepecoinppc/pepecoin/blob/master/INSTALL.md). Feel free to inspect the script before running it.
-it does these steps:  
-      1. Prompts you for rpc_user and rpc_password you wanna use. 
-      2. Download compiled binaries
-      3. Create pepecoin.conf
-      4. Add Pepecoin binaries to PATH
-      5. Start Pepecoin daemon
-      6. verify the daemon is indeed running 
+- **For MacOS**
+  ```bash
+  pepecoin-setup-macos
+  # this will build pepecoin binaries using openssl 1.1
+  ```
 
-- **Running Pepecoin Node**: You must have a Pepecoin node running with RPC enabled (you can start it by running `pepecoind -daemon` from the terminal).
+###  3.Run the test script
 
-- **RPC Credentials**: Don't forget to add `RPC_USER` and `RPC_PASSWORD` in your `.env` file.
+- **For Linux**
+  ```bash
+  pepecoin-test
+  ```
 
-- It is important that you validate all is okay before moving forward. 
-Run `pepecoin-cli getblockchaininfo`  and if you dont see a json output go to installation_troubleshooting.md 
-
----
+This will test RPC connection as well as wallet creation
+synch feature and some other essentials. 
 
 
-## Understanding the Limitations
+###  4.Run the coin transfer test script
 
-Pepecoin's Core Version: Pepecoin is based on an older version of Bitcoin Core (likely around 0.10.x), which does not support the createwallet RPC method or multi-wallet functionality introduced in Bitcoin Core 0.17.0.
-Single Wallet System: In this version, the node operates with a single wallet (wallet.dat) located in the data directory. There is no native support for managing multiple wallets via RPC calls.
-Although accounts are deprecated in later versions of Bitcoin Core, they are available in the version Pepecoin is based on. Accounts allow you to partition your wallet into multiple logical sections, effectively simulating multiple wallets.
-How Accounts Work
-Separate Balances: Each account maintains its own balance, separate from other accounts.
-Address Management: You can generate addresses associated with specific accounts.
-Transaction Tracking: Transactions can be attributed to specific accounts.
-All accounts share the same underlying wallet file. There is no way to encrypt accounts individually via RPC. Wallet-level encryption affects all accounts.
+
+- **For Linux**
+  ```bash
+  pepecoin-transfer-test
+  ```
+
+
+- This will test account logic. You will need to send some coin to source_account. (You may buy pepecoin from Xeggex.com) 
+- Rerun to see if coin is delivered. 
+- If the coin is delivered, script will send 0.1 pepecoin to destinatinaiton address. 
+
+
+
+## Simple Troubleshooting
+
+Make sure pepecoin node is running by running 
+
+`pepecoind -daemon`
+
+Run `pepecoin-cli getblockchaininfo`  and if you dont see a json output go to installation_troubleshooting.md
+
+
+
+## Understanding the Limitations of Pepecoin Blockchain
+
+1. Pepecoin is based on an older version of Bitcoin Core (likely around 0.10.x), which does not support the createwallet RPC method or multi-wallet functionality introduced in Bitcoin Core 0.17.0.
+
+2. Single Wallet System: In this version, the node operates with a single wallet (wallet.dat) located in the data directory. There is no native support for managing multiple wallets via RPC calls. 
+
+3. To simulate wallet logic accounts are used. Accounts allow you to partition your wallet into multiple logical sections, effectively simulating multiple wallets.
+
+4.  How Accounts Work can be summed like this: 
+  - Separate Balances: Each account maintains its own balance, separate from other accounts.
+  - Address Management: You can generate addresses associated with specific accounts.
+  - Transaction Tracking: Transactions can be attributed to specific accounts.
+  - All accounts share the same underlying wallet file. There is no way to encrypt accounts individually via RPC. Wallet-level encryption affects all accounts.
+
+
+
+
 
 
 
