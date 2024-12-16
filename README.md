@@ -113,6 +113,16 @@ synch feature and some other essentials.
 - **For Linux**
   ```bash
   pepecoin-transfer-test
+
+
+  # if you want to check if destination account indeed got the pepe run: 
+  
+  pepecoin-cli getreceivedbyaddress "destination_address_here"
+
+  # if you want to check the remaining balance of the source account run:
+  
+  pepecoin-cli getbalance "source_address_here"
+
   ```
 
 
