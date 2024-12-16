@@ -88,7 +88,7 @@ This script will clone official pepecoin core and:
   pepecoin-setup
   ```
 
-- **For MacOS**
+- **For MacOS(will be ready soon)**
 
 Offical repo installation does not support pepecoin-cli for MacOS. So I patched it and made it work. But use it only for development. 
   ```bash
