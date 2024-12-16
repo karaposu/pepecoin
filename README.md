@@ -60,10 +60,8 @@ curl -fsSL https://raw.githubusercontent.com/karaposu/pepecoin/refs/heads/main/p
 
 - **MacOS**: MacOS version must be at least 15
 - **Xcode**: Download Xcode and Xcode command line tools
-``` 
-curl -fsSL https://raw.githubusercontent.com/karaposu/pepecoin/refs/heads/main/pepecoin/scripts/virgin_vm.sh | bash
+- **OpenSSL 1.1**: We need openSSL 1.1 to build from source. 
 
-```
 
 ###  1. Install pepecoin package
 
@@ -140,7 +138,7 @@ Run `pepecoin-cli getblockchaininfo`  and if you dont see a json output go to in
 
 2. Single Wallet System: In this version, the node operates with a single wallet (wallet.dat) located in the data directory. There is no native support for managing multiple wallets via RPC calls. 
 
-3. To simulate wallet logic accounts are used. Accounts allow you to partition your wallet into multiple logical sections, effectively simulating multiple wallets.
+3. To simulate wallet logic "accounts" are used. Accounts allow you to partition your wallet into multiple logical sections, effectively simulating multiple wallets.
 
 4.  How Accounts Work can be summed like this: 
   - Separate Balances: Each account maintains its own balance, separate from other accounts.
