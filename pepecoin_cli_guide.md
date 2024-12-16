@@ -8,8 +8,6 @@
 ## get received amount in address 
 
 pepecoin-cli getreceivedbyaddress "PdUKs4Ko1nkgX5vk81pGisA7LNNyFjvAJk"
-pepecoin-cli getreceivedbyaddress "PqsvAyU1GBnWj1Aa9g3EfgtYnXD87MDjA5"
-
 
 ## get balance  in address 
 pepecoin-cli getbalance "source_account"
