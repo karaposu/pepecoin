@@ -48,7 +48,7 @@ pip install pepecoin
 
 ## Step by Step Setup Guide
 
-###  0.Install Python 3.11 [Optional, Linux Only]
+###  0. Install Python 3.11 [Optional, Linux Only]
 
 - **Linux**: copy and run below command
 ``` 
@@ -56,25 +56,22 @@ curl -fsSL https://raw.githubusercontent.com/karaposu/pepecoin/refs/heads/main/p
 
 ```
 
-###  0.Prerequisites for Mac Users 
+###  0. Prerequisites for Mac Users 
 
 - **MacOS**: MacOS version must be at least 15
 - **Xcode**: Download Xcode and Xcode command line tools
-``` 
-curl -fsSL https://raw.githubusercontent.com/karaposu/pepecoin/refs/heads/main/pepecoin/scripts/virgin_vm.sh | bash
+- **OpenSSL 1.1**: We need openSSL 1.1 to build from source. 
 
-```
 
-###  1.Install pepecoin package
+###  1. Install pepecoin package
 
 ``` 
 pip install pepecoin
-
 ```
 
-###  2.Run the setup script
+###  2. Run the setup script
 
-This script will clone official pepecoin core and 
+This script will clone official pepecoin core and:
 1. Prompts you to create rpc_user and rpc_password 
 2. Download compiled binaries
 3. Create pepecoin.conf
@@ -84,7 +81,7 @@ This script will clone official pepecoin core and
 
 (rpc_user and password can be found in ~/.pepecoin/pepecoin.conf) 
 
-Offical repo installation does not support pepecoin-cli for MacOS. So I patched it and made it work. But use it only for development. 
+
 
 - **For Linux**
   ```bash
@@ -92,12 +89,14 @@ Offical repo installation does not support pepecoin-cli for MacOS. So I patched 
   ```
 
 - **For MacOS**
+
+Offical repo installation does not support pepecoin-cli for MacOS. So I patched it and made it work. But use it only for development. 
   ```bash
   pepecoin-setup-macos
   # this will build pepecoin binaries using openssl 1.1
   ```
 
-###  3.Run the test script
+###  3. Run the test script
 
 - **For Linux**
   ```bash
@@ -108,7 +107,7 @@ This will test RPC connection as well as wallet creation
 synch feature and some other essentials. 
 
 
-###  4.Run the coin transfer test script
+###  4. Run the coin transfer test script
 
 
 - **For Linux**
@@ -119,17 +118,17 @@ synch feature and some other essentials.
 
 - This will test account logic. You will need to send some coin to source_account. (You may buy pepecoin from Xeggex.com) 
 - Rerun to see if coin is delivered. 
-- If the coin is delivered, script will send 0.1 pepecoin to destinatinaiton address. 
+- If the coin is delivered, script will send 0.1 pepecoin to destination address. 
 
 
 
 ## Simple Troubleshooting
 
-Make sure pepecoin node is running by running 
+Make sure pepecoin node is running by running :
 
 `pepecoind -daemon`
 
-Run `pepecoin-cli getblockchaininfo`  and if you dont see a json output go to installation_troubleshooting.md
+Run `pepecoin-cli getblockchaininfo`  and if you dont see a json output go to installation_troubleshooting.md 
 
 
 
@@ -139,7 +138,7 @@ Run `pepecoin-cli getblockchaininfo`  and if you dont see a json output go to in
 
 2. Single Wallet System: In this version, the node operates with a single wallet (wallet.dat) located in the data directory. There is no native support for managing multiple wallets via RPC calls. 
 
-3. To simulate wallet logic accounts are used. Accounts allow you to partition your wallet into multiple logical sections, effectively simulating multiple wallets.
+3. To simulate wallet logic "accounts" are used. Accounts allow you to partition your wallet into multiple logical sections, effectively simulating multiple wallets.
 
 4.  How Accounts Work can be summed like this: 
   - Separate Balances: Each account maintains its own balance, separate from other accounts.
@@ -167,7 +166,7 @@ pepecoin = Pepecoin(
     rpc_user=os.environ.get("RPC_USER"),
     rpc_password=os.environ.get("RPC_PASSWORD"),
     host="127.0.0.1",
-    port=29373,
+    port=33873,
     wallet_name="merchant_wallet"
 )
 ```
@@ -190,7 +189,7 @@ pepecoin = Pepecoin(
     rpc_user="pepe_user",
     rpc_password="pepe_pass",
     host="127.0.0.1",
-    port=29373
+    port=33873
 )
 
 # Creating (or retrieving) an account named "my_new_account"
