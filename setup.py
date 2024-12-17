@@ -6,7 +6,7 @@ import os
 
 setup(
     name='pepecoin',  # Package name
-    version='0.0.16',  # Version of your package
+    version='0.0.17',  # Version of your package
     author='we are all PEPE',  # Your name
     include_package_data=True,
     packages=find_packages(),  # Automatically find packages in the directory
