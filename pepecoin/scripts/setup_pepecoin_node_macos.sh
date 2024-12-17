@@ -342,3 +342,6 @@ else
 fi
 
 echo "Pepecoin node setup completed successfully."
+
+echo "To test essential capabilities with the help of pepecoin package please run: "
+echo "pepecoin-test"
