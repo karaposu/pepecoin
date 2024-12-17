@@ -86,6 +86,10 @@ This script will clone official pepecoin core and:
 - **For Linux**
   ```bash
   pepecoin-setup
+  
+  # dont forget to run
+  
+  source ~/.bashrc
   ```
 
 - **For MacOS(will be ready soon)**
