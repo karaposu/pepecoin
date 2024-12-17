@@ -46,7 +46,7 @@ pip install pepecoin
 
 ---
 
-## Step by Step Setup Guide
+## Step by Step Pepecoin Node Setup Guide
 
 ###  0. Install Python 3.11 [Optional, Linux Only]
 

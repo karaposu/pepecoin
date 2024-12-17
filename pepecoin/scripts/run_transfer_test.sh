@@ -3,7 +3,7 @@
 # Exit on errors
 set -e
 
-EPECOIN_CONF="$HOME/.pepecoin/pepecoin.conf"
+PEPECOIN_CONF="$HOME/.pepecoin/pepecoin.conf"
 
 # --- Read RPC credentials from ~/.pepecoin/pepecoin.conf ---
 if [ ! -f "$PEPECOIN_CONF" ]; then
