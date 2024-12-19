@@ -11,6 +11,7 @@ pepecoin-cli getreceivedbyaddress "PdUKs4Ko1nkgX5vk81pGisA7LNNyFjvAJk"
 
 ## get balance  in address 
 pepecoin-cli getbalance "source_account"
+pepecoin-cli getbalance "destination_account"
 
 
 ## list all accounts 
