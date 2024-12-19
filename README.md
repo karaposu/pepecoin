@@ -48,6 +48,10 @@ pip install pepecoin
 
 ## Step by Step Pepecoin Node Setup Guide
 
+
+
+[![Tutorial](https://img.youtube.com/vi/yZv0HnXzRog/0.jpg)](https://www.youtube.com/watch?v=yZv0HnXzRog)
+
 ###  0. Install Python 3.11 [Optional, Linux Only]
 
 - **Linux**: copy and run below command
@@ -87,8 +91,7 @@ This script will clone official pepecoin core and:
   ```bash
   pepecoin-setup
   
-  # dont forget to run
-  
+  # after the setup dont forget to run this:
   source ~/.bashrc
   ```
 
